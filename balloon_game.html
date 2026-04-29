@@ -2,129 +2,307 @@
 <html lang='en'>
 <head>
 <meta charset='utf-8'>
-<title>Skybound Ember</title>
+<title>Skybound Ember &mdash; cr8script atlas, plate V.I</title>
 <meta name='viewport' content='width=device-width, initial-scale=1'>
+<link rel='preconnect' href='https://fonts.googleapis.com'>
+<link rel='preconnect' href='https://fonts.gstatic.com' crossorigin>
+<link href='https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,200..900;1,9..144,200..900&family=JetBrains+Mono:wght@400;500;600&display=swap' rel='stylesheet'>
 <style>
   :root {
-    --paper: #fff7e8;
-    --border: #ffb347;
-    --sky-top: #0f355f;
-    --sky-mid: #4f87c2;
-    --sky-low: #f7c873;
-    --shadow: rgba(15, 17, 28, 0.34);
+    --bg-top: #0c1024;
+    --bg-bot: #070912;
+    --ink: #f5ecd6;
+    --ink-soft: rgba(245,236,214,0.78);
+    --dim: #7d7a96;
+    --hair: rgba(245,236,214,0.14);
+    --hair-strong: rgba(245,236,214,0.28);
+    --c-syntax: #e9b478;
+    --c-pipelines: #7ec5b8;
+    --c-types: #d8a3b8;
+    --c-builtins: #a3c79e;
+    --c-tooling: #9aafd6;
+    --c-principles: #c3a6d8;
   }
   * { box-sizing: border-box; }
-  html, body { margin: 0; min-height: 100%; }
+  html, body { margin: 0; padding: 0; min-height: 100%; }
   body {
-    min-height: 100vh;
-    display: grid;
-    place-items: center;
-    padding: 28px 16px;
-    color: #172033;
-    font-family: 'Avenir Next', 'Trebuchet MS', 'Segoe UI', sans-serif;
     background:
-      radial-gradient(circle at top, rgba(255,255,255,0.58), transparent 32%),
-      linear-gradient(180deg, var(--sky-top) 0%, var(--sky-mid) 52%, var(--sky-low) 100%);
+      radial-gradient(ellipse 70% 45% at 82% 6%, rgba(233,180,120,0.22), transparent 60%),
+      radial-gradient(ellipse 60% 40% at 12% 96%, rgba(126,197,184,0.12), transparent 60%),
+      linear-gradient(180deg, var(--bg-top), var(--bg-bot));
+    color: var(--ink);
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-size: 14px;
+    line-height: 1.55;
+    min-height: 100vh;
   }
-  .shell {
-    width: min(100%, 920px);
-    display: grid;
-    gap: 16px;
+  body::before {
+    content: '';
+    position: fixed; inset: 0;
+    background-image: radial-gradient(rgba(255,255,255,0.04) 1px, transparent 1px);
+    background-size: 3px 3px;
+    pointer-events: none;
+    mix-blend-mode: screen;
+    opacity: 0.55;
+    z-index: 0;
   }
-  .masthead {
-    display: grid;
-    gap: 10px;
-    padding: 18px 20px;
-    border-radius: 22px;
-    background: rgba(255, 247, 232, 0.9);
-    border: 2px solid rgba(255,255,255,0.42);
-    box-shadow: 0 18px 40px var(--shadow);
-    backdrop-filter: blur(10px);
-  }
-  .eyebrow {
-    font-size: 12px;
-    text-transform: uppercase;
-    letter-spacing: 0.24em;
-    color: #9a5a15;
-    font-weight: 800;
-  }
-  h1 {
-    margin: 0;
-    font-size: clamp(2rem, 4vw, 3.5rem);
-    line-height: 0.95;
-    letter-spacing: -0.04em;
-    font-family: Georgia, 'Times New Roman', serif;
-  }
-  .deck {
-    display: grid;
-    gap: 8px;
-    color: rgba(23, 32, 51, 0.88);
-    font-size: 15px;
-  }
-  .legend {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 10px;
-    font-size: 13px;
-  }
-  .legend span {
-    padding: 8px 11px;
-    border-radius: 999px;
-    background: rgba(255,255,255,0.72);
-    border: 1px solid rgba(23, 32, 51, 0.09);
-  }
-  .canvas-card {
-    padding: 14px;
-    border-radius: 28px;
-    background: linear-gradient(180deg, rgba(255,255,255,0.28), rgba(255,255,255,0.1));
-    border: 2px solid rgba(255,255,255,0.34);
-    box-shadow: 0 24px 54px var(--shadow);
-  }
-  canvas {
+
+  /* ======= top strip ======= */
+  .strip {
+    position: relative;
+    z-index: 2;
     width: 100%;
-    height: auto;
+    border-bottom: 1px solid var(--hair);
+    padding: 14px 24px;
+    display: flex;
+    justify-content: space-between;
+    gap: 24px;
+    font-size: 11px;
+    color: var(--dim);
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+  }
+  .strip a { color: var(--ink-soft); text-decoration: none; }
+  .strip a:hover { color: var(--ink); }
+  .strip b { color: var(--ink); font-weight: 500; letter-spacing: 0.18em; }
+  .strip .center { color: var(--dim); }
+  .strip .pulse {
+    display: inline-block; width: 6px; height: 6px; border-radius: 50%;
+    background: var(--c-syntax);
+    box-shadow: 0 0 12px var(--c-syntax);
+    margin-right: 8px; vertical-align: 1px;
+    animation: heartbeat 2.4s ease-in-out infinite;
+  }
+  @keyframes heartbeat {
+    0%, 100% { opacity: 0.85; transform: scale(1); }
+    50% { opacity: 0.45; transform: scale(0.85); }
+  }
+
+  /* ======= plate ======= */
+  main.plate {
+    position: relative;
+    z-index: 1;
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 56px 28px 24px;
+  }
+  .plate__label {
+    position: absolute;
+    top: 14px; left: 28px;
+    font-size: 10px; letter-spacing: 0.24em;
+    text-transform: uppercase; color: var(--dim);
+  }
+  .plate__label b { color: var(--ink); font-weight: 500; }
+  .plate__index {
+    position: absolute;
+    top: 14px; right: 28px;
+    font-size: 10px; letter-spacing: 0.24em;
+    text-transform: uppercase; color: var(--dim);
+  }
+
+  /* ======= hero ======= */
+  .hero__title {
+    font-family: 'Fraunces', serif;
+    font-style: italic;
+    font-weight: 200;
+    font-variation-settings: 'opsz' 144, 'SOFT' 100;
+    font-size: clamp(48px, 9vw, 124px);
+    line-height: 0.92;
+    letter-spacing: -0.025em;
+    margin: 18px 0 0;
+  }
+  .hero__title .amp {
+    font-style: normal; font-weight: 200;
+    color: var(--dim);
+    margin: 0 0.18em;
+  }
+  .hero__title em {
+    font-style: italic; font-weight: 300;
+    color: var(--c-syntax);
+  }
+  .hero__sub {
+    margin-top: 14px;
+    font-family: 'Fraunces', serif;
+    font-style: italic;
+    font-weight: 300;
+    font-size: clamp(17px, 2.1vw, 22px);
+    color: var(--ink-soft);
+    letter-spacing: 0.005em;
+  }
+  .hero__pitch {
+    margin-top: 22px;
+    max-width: 680px;
+    color: var(--ink-soft);
+    font-size: 13.5px;
+    line-height: 1.7;
+  }
+  .hero__pitch em {
+    font-family: 'Fraunces', serif;
+    font-style: italic; font-weight: 400;
+    color: var(--ink);
+  }
+
+  /* ======= instrument rows (controls + chart key) ======= */
+  .row {
+    margin-top: 28px;
+    display: flex; flex-wrap: wrap; gap: 8px 22px;
+    border-top: 1px solid var(--hair);
+    padding-top: 16px;
+    font-size: 10px; letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--ink);
+  }
+  .row .lab {
+    color: var(--dim);
+    font-size: 9px;
+    margin-right: 14px;
+    letter-spacing: 0.24em;
+  }
+  .row .item {
+    display: inline-flex; align-items: center; gap: 8px;
+    color: var(--ink-soft);
+  }
+  .row .item .dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    box-shadow: 0 0 14px currentColor;
+  }
+  kbd {
+    display: inline-block;
+    padding: 3px 8px;
+    border: 1px solid var(--hair-strong);
+    border-bottom-width: 2px;
+    border-radius: 4px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    color: var(--ink);
+    background: rgba(245,236,214,0.04);
+    line-height: 1;
+    margin: 0 1px;
+  }
+
+  /* ======= canvas frame ======= */
+  .canvas-wrap {
+    margin-top: 32px;
+    position: relative;
+    width: 100%;
+    aspect-ratio: 720 / 540;
+    background: transparent;
+  }
+  .canvas-wrap canvas {
     display: block;
-    border: 4px solid #ffb347;
-    border-radius: 22px;
+    width: 100%;
+    height: 100%;
+    border: 1px solid var(--hair);
     background: transparent;
     touch-action: none;
-    box-shadow: inset 0 0 0 1px rgba(255,255,255,0.12);
+    cursor: pointer;
   }
-  .footer {
-    text-align: center;
-    font-size: 12px;
-    color: rgba(255,247,232,0.74);
-    letter-spacing: 0.08em;
+  .canvas-wrap::before, .canvas-wrap::after,
+  .canvas-wrap > .corner-br, .canvas-wrap > .corner-bl {
+    content: '';
+    position: absolute;
+    width: 14px; height: 14px;
+    border: 1px solid rgba(245,236,214,0.32);
+    pointer-events: none;
+  }
+  .canvas-wrap::before { top: -4px; left: -4px; border-right: 0; border-bottom: 0; }
+  .canvas-wrap::after  { top: -4px; right: -4px; border-left: 0; border-bottom: 0; }
+  .canvas-wrap > .corner-br { bottom: -4px; right: -4px; border-left: 0; border-top: 0; }
+  .canvas-wrap > .corner-bl { bottom: -4px; left: -4px; border-right: 0; border-top: 0; }
+
+  .caption {
+    margin-top: 14px;
+    display: flex; justify-content: space-between; flex-wrap: wrap; gap: 10px;
+    font-size: 10px; letter-spacing: 0.22em;
+    text-transform: uppercase; color: var(--dim);
+  }
+
+  /* ======= footer ======= */
+  footer {
+    position: relative; z-index: 1;
+    max-width: 1100px; margin: 56px auto 0;
+    padding: 24px 28px 40px;
+    border-top: 1px solid var(--hair);
+    display: flex; justify-content: space-between; flex-wrap: wrap; gap: 12px;
+    color: var(--dim);
+    font-size: 10px; letter-spacing: 0.22em;
     text-transform: uppercase;
   }
+  footer a { color: var(--ink-soft); text-decoration: none; }
+  footer a:hover { color: var(--ink); }
+
+  ::selection { background: rgba(233,180,120,0.35); color: var(--ink); }
+
   @media (max-width: 720px) {
-    body { padding: 14px; }
-    .masthead { padding: 16px; }
-    .legend { display: grid; grid-template-columns: 1fr 1fr; }
+    main.plate { padding: 56px 18px 18px; }
+    .strip { padding: 12px 16px; font-size: 10px; gap: 12px; }
+    .strip .center { display: none; }
+    .row { font-size: 9px; gap: 6px 14px; }
+    .row .lab { display: none; }
+    footer { padding: 18px 16px 28px; }
   }
 </style>
 </head>
 <body>
-<main class='shell'>
-  <section class='masthead'>
-    <div class='eyebrow'>cr8script browser game</div>
-    <h1>Skybound Ember</h1>
-    <div class='deck'>
-      <div>Ride a hand-painted hot air balloon through the evening thermals. Keep the burner fed, thread the glowing hoops, and survive the weather.</div>
-      <div>Controls: <b><- -> / A D</b> steer, <b>Space / ↑ / W</b> climbs, and <b>R</b> restarts after a crash.</div>
-    </div>
-    <div class='legend'>
-      <span>⭕ Ring: +25</span>
-      <span>✦ Star: +15</span>
-      <span>🛢 Fuel: burner refill</span>
-      <span>☁ Storm / 🐦 birds: lose a heart</span>
-    </div>
-  </section>
-  <section class='canvas-card'>
+
+<div class='strip'>
+  <div><span class='pulse'></span><b>cr8script</b> &middot; plate <b>V.I</b></div>
+  <div class='center'>example &middot; <b>skybound ember</b> &middot; edition <b>I.I</b></div>
+  <div><a href='https://cr8script.com/' target='_blank' rel='noopener'>cr8script.com &#x2197;</a></div>
+</div>
+
+<main class='plate'>
+  <div class='plate__label'>plate <b>V.I</b> &middot; the game</div>
+  <div class='plate__index'>i / i</div>
+
+  <h1 class='hero__title'>Skybound<span class='amp'>&middot;</span><em>Ember</em></h1>
+  <div class='hero__sub'>a small expedition through the evening thermals</div>
+
+  <p class='hero__pitch'>
+    Ride a hand-painted hot air balloon through dusk weather. Keep the burner
+    fed, thread the glowing hoops, and survive the storms. The whole game is
+    a single <em>.cr8</em> generator that prints this page.
+  </p>
+
+  <div class='row'>
+    <span class='lab'>controls</span>
+    <span class='item'><kbd>&larr;</kbd><kbd>&rarr;</kbd> &middot; steer</span>
+    <span class='item'><kbd>A</kbd><kbd>D</kbd> &middot; steer</span>
+    <span class='item'><kbd>SPACE</kbd><kbd>&uarr;</kbd><kbd>W</kbd> &middot; burner</span>
+    <span class='item'><kbd>R</kbd> &middot; restart</span>
+  </div>
+
+  <div class='row'>
+    <span class='lab'>chart key</span>
+    <span class='item'><span class='dot' style='color:var(--c-types);background:var(--c-types)'></span>ring &middot; +25</span>
+    <span class='item'><span class='dot' style='color:var(--c-syntax);background:var(--c-syntax)'></span>star &middot; +15</span>
+    <span class='item'><span class='dot' style='color:var(--c-builtins);background:var(--c-builtins)'></span>fuel &middot; refill</span>
+    <span class='item'><span class='dot' style='color:var(--c-tooling);background:var(--c-tooling)'></span>storm &middot; -1</span>
+    <span class='item'><span class='dot' style='color:var(--c-principles);background:var(--c-principles)'></span>bird &middot; -1</span>
+  </div>
+
+  <div class='canvas-wrap'>
+    <span class='corner-br'></span>
+    <span class='corner-bl'></span>
     <canvas id='game' width='720' height='540' tabindex='0' aria-label='Skybound Ember game canvas'></canvas>
-  </section>
-  <div class='footer'>built from a cr8script generator</div>
+  </div>
+
+  <div class='caption'>
+    <span>fig. i &mdash; the expedition, charted by altitude</span>
+    <span>generated by examples/make_balloon_game.cr8</span>
+  </div>
 </main>
+
+<footer>
+  <span>cr8script &middot; 2026 &middot; MIT &mdash; by Lofi Fren</span>
+  <span>
+    <a href='https://github.com/LofiFren/cr8script' target='_blank' rel='noopener'>repo &#x2197;</a>
+    &nbsp;&middot;&nbsp;
+    <a href='https://cr8script.com/' target='_blank' rel='noopener'>atlas &#x2197;</a>
+  </span>
+</footer>
 <script>
 (() => {
   const canvas = document.getElementById('game');
