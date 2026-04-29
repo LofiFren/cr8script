@@ -1,0 +1,7 @@
+all sales: 162.75 across 6 rows
+doodad: total=99, n=1
+widget: total=52.5, n=3
+gadget: total=11.25, n=2
+east: 8 .. 99 (avg 36.125)
+west: 3.25 .. 15 (avg 9.125)
+widget orders: 3

@@ -1,0 +1,29 @@
+# All field accesses below are valid. Running this file should produce no
+# errors via either the runtime or the static checker.
+
+let r = { name: "Ada", age: 36 }
+show r.name
+show r.age
+
+# Methods and properties on records
+show r.keys
+show r.has("age")
+
+# Pipeline with field-scoped expressions
+let people = [
+  { name: "Bob", age: 17 },
+  { name: "Cleo", age: 41 },
+  { name: "Dee", age: 12 },
+]
+
+let names = people | where age is at least 18 | map name
+show names.join(", ")
+
+# Field access through a for-each item shape
+for each p in people
+  show f"{p.name}: {p.age}"
+end
+
+# Nested record field access
+let nested = { person: { name: "Eve", age: 50 } }
+show nested.person.name

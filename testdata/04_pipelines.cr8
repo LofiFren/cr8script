@@ -1,0 +1,26 @@
+let sales = [
+  { product: "widget", amount: 12.50 },
+  { product: "gadget", amount:  8.00 },
+  { product: "widget", amount: 15.00 },
+  { product: "gadget", amount:  3.25 },
+  { product: "doodad", amount: 99.00 },
+]
+
+# Filter, sort, take
+let top = sales
+  | where amount is greater than 10
+  | sort by amount descending
+  | take 2
+  | map product
+
+show top.join(" / ")
+
+# Pipeline producing numbers
+let big_amounts = sales
+  | where amount is at least 10
+  | map amount
+
+show sum(big_amounts)
+show count(big_amounts)
+show average(big_amounts)
+show big_amounts.length
