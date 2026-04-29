@@ -1,0 +1,72 @@
+# Daily standup report from a list of tickets, emitted as markdown.
+# The "summarize this for me" task LLMs get every day — done in cr8
+# without templating libraries.
+#
+#   python3 cr8script.py examples/report_md.cr8 > report.md
+#
+# Open report.md in any markdown viewer. Output is paste-ready into
+# Slack or email.
+
+let date = "2026-04-29"
+
+let tickets = [
+  { id: "ENG-101", title: "Add caching layer",        owner: "Ada",    status: "done",        priority: "high"   },
+  { id: "ENG-102", title: "Fix auth bug",             owner: "Bob",    status: "in-progress", priority: "high"   },
+  { id: "ENG-103", title: "Update docs",              owner: "Ada",    status: "todo",        priority: "low"    },
+  { id: "ENG-104", title: "Migrate database",         owner: "Carlos", status: "in-progress", priority: "high"   },
+  { id: "ENG-105", title: "Refactor pipeline",        owner: "Bob",    status: "blocked",     priority: "medium" },
+  { id: "ENG-106", title: "Add metrics dashboard",    owner: "Ada",    status: "in-progress", priority: "medium" },
+  { id: "ENG-107", title: "Onboard new vendor",       owner: "Carlos", status: "done",        priority: "low"    },
+]
+
+let groups = tickets | group by owner
+
+show f"# Daily standup — {date}"
+show ""
+show f"_{length(tickets)} tickets across {length(groups)} owners._"
+show ""
+
+# --- by status ---------------------------------------------------------
+# After `group by status`, each row has a `status` field (the group key)
+# and an `items` list. Bare `items` inside `summarize` resolves to that
+# list; `length(items)` is the per-status count.
+show "## By status"
+show ""
+let by_status = tickets
+  | group by status
+  | summarize { n: length(items) }
+  | sort by n descending
+for each row in by_status
+  show f"- **{row.status}** — {row.n}"
+end
+show ""
+
+# --- per owner ---------------------------------------------------------
+show "## Per owner"
+show ""
+for each g in groups
+  let theirs = g.items
+  let done   = theirs | where status is "done"
+  show f"### {g.owner}"
+  show ""
+  show f"- {length(done)} done / {length(theirs)} total"
+  show ""
+  for each t in theirs
+    show f"  - `{t.id}` ({t.status}) — {t.title}"
+  end
+  show ""
+end
+
+# --- urgent unfinished -------------------------------------------------
+let urgent = tickets
+  | where priority is "high"
+  | where status is not "done"
+show "## High priority, not yet done"
+show ""
+if length(urgent) is 0 then
+  show "_None — nice._"
+else
+  for each t in urgent
+    show f"- `{t.id}` — **{t.title}** ({t.owner}, {t.status})"
+  end
+end

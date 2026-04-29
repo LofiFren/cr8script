@@ -1,0 +1,28 @@
+# A small report over a list of orders. Intentionally broken — three
+# classic typos an LLM will produce. The static checker catches all
+# three before the program runs:
+#
+#   python3 cr8script.py --check-json examples/agent_loop/broken.cr8
+#
+# Output is a JSON list of { severity, line, message, hint } records.
+# Iterate against it before running. The corrected version is in
+# fixed.cr8 in this same directory.
+
+let first = { id: 101, customer: "Ada", amount: 12.50 }
+
+let orders = [
+  { id: 101, customer: "Ada",    amount: 12.50 },
+  { id: 102, customer: "Bob",    amount:  8.00 },
+  { id: 103, customer: "Carlos", amount: 99.00 },
+]
+
+# Bug 1: typo on a directly-tracked record literal field.
+show f"first customer: {first.cusomer}"
+
+# Bug 2: typo inside a pipeline filter (bare `it` carries the row shape).
+let big_orders = orders | where it.amout is greater than 10
+show f"big orders: {length(big_orders)}"
+
+# Bug 3: typo inside a pipeline map.
+let labels = orders | map it.custmer
+show f"labels: {labels}"

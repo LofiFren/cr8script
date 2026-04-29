@@ -1,0 +1,40 @@
+# Fetch JSON from a public API, summarize per-user, emit CSV. The
+# canonical "real data flow" demo: http -> json -> pipelines -> csv,
+# all in one file with no imports.
+#
+# Default URL is JSONPlaceholder — a stable fake REST API of 100 fake
+# blog posts. Override with a CLI arg if you want to point at something
+# else that returns a JSON list of records.
+#
+#   python3 cr8script.py examples/api_ingest.cr8
+#   python3 cr8script.py examples/api_ingest.cr8 https://jsonplaceholder.typicode.com/comments
+
+let url = if args.length is at least 1 then args[1]
+          else "https://jsonplaceholder.typicode.com/posts"
+          end
+
+show f"GET {url}"
+let r = http.get(url)
+
+# `r.ok` is connection-level: true even on HTTP 4xx/5xx. We decide what
+# counts as success ourselves — the language doesn't guess.
+if r.ok is false then
+  show f"network error: {r.error}"
+else if r.status is less than 200 or r.status is at least 300 then
+  show f"HTTP {r.status} — aborting"
+else
+  let posts = json.parse(r.body)
+  show f"fetched {length(posts)} records in {r.time_ms} ms"
+  show ""
+
+  # Aggregate: posts per userId, ranked.
+  let by_user = posts
+    | group by userId
+    | summarize { n_posts: length(items) }
+    | sort by n_posts descending
+
+  # Write CSV header + rows. csv.write takes a list of records and
+  # returns the encoded text — handy for piping or composing.
+  show "# CSV output below — pipe to a file with > out.csv"
+  show csv.write(by_user)
+end

@@ -1,0 +1,70 @@
+# Validate a list of records against a small schema. Emits a result
+# of the form { ok, errors }, where errors is a list of
+# { index, field, message } records — one entry per failing field.
+#
+# This is the agent-loop primitive: when an LLM upstream produces
+# structured data, run this kind of check before trusting it. Every
+# failure has the precise location and reason, so the model can fix
+# without re-deriving context.
+#
+#   python3 cr8script.py examples/validate.cr8
+
+let people = [
+  { id: 1, name: "Ada",    age: 36 },
+  { id: 2, name: "Bob"               },
+  { id: 3, name: 17,       age: 42 },
+  { id: 4, name: "Dora",   age: -5 },
+  { id: 5, name: "Edna",   age: 71 },
+]
+
+# A validator is just a function that returns a list of error records.
+# We use `r.get("key")` for safe access — `r.field` would error on a
+# missing field, which is wrong for *checking* whether it exists.
+to validate_person(r, i)
+  var errors = []
+
+  let id_v = r.get("id")
+  if id_v is nothing then
+    errors = errors + [{ index: i, field: "id", message: "missing" }]
+  end
+
+  let name_v = r.get("name")
+  if name_v is nothing then
+    errors = errors + [{ index: i, field: "name", message: "missing" }]
+  else if type(name_v) is not "text" then
+    errors = errors + [{ index: i, field: "name", message: f"must be text, got {type(name_v)}" }]
+  end
+
+  let age_v = r.get("age")
+  if age_v is nothing then
+    errors = errors + [{ index: i, field: "age", message: "missing" }]
+  else if type(age_v) is not "number" then
+    errors = errors + [{ index: i, field: "age", message: f"must be number, got {type(age_v)}" }]
+  else if age_v is less than 0 then
+    errors = errors + [{ index: i, field: "age", message: "must be at least 0" }]
+  end
+
+  return errors
+end
+
+to validate_all(items)
+  var all_errors = []
+  for each i in 1..length(items)
+    let errs = validate_person(items[i], i)
+    all_errors = all_errors + errs
+  end
+  return { ok: length(all_errors) is 0, errors: all_errors }
+end
+
+let result = validate_all(people)
+
+show f"checked {length(people)} record(s) — ok: {result.ok}"
+show f"errors: {length(result.errors)}"
+for each e in result.errors
+  show f"  record #{e.index} field={e.field} — {e.message}"
+end
+
+# Round-trip the diagnostics as JSON so a calling agent can parse them.
+show ""
+show "# JSON for upstream consumption:"
+show json.stringify(result)

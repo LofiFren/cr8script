@@ -68,8 +68,16 @@ gadget: 8 across 1 order(s)
 
 ## For language models
 
-[`LLMS.md`](LLMS.md) is a condensed grammar + rules sheet aimed at any
-model asked to read or write `.cr8` code. The self-correction loop is:
+Three files are aimed at agents and the humans wiring them up:
+
+- [`LLMS.md`](LLMS.md) — condensed grammar + rules sheet. Read this first.
+- [`AGENTS.md`](AGENTS.md) — system-prompt template, tool definitions,
+  and the self-correction loop spelled out for an integrator.
+- [`examples/agent_loop/`](examples/agent_loop/) — a broken `.cr8` file,
+  the actual `--check-json` JSON output, and the corrected version.
+  The end-to-end demo of cr8 → diagnostics → fix.
+
+The self-correction loop:
 
 ```bash
 python3 cr8script.py --check-json file.cr8     # structured diagnostics
@@ -96,7 +104,13 @@ objects).
 ```
 cr8script.py     single-file interpreter
 LLMS.md          rules-and-grammar sheet for LLMs
-examples/        hello, tour, load_test, make_game, make_mindmap
+AGENTS.md        system-prompt template + agent tool definitions
+examples/
+  hello, tour, load_test, make_game, make_mindmap
+  agent_loop/    broken → diagnostics → fixed (the LLM self-correction demo)
+  api_ingest     fetch JSON, summarize, emit CSV
+  validate       list of records → { ok, errors } per item
+  report_md      structured data → markdown report
 testdata/        golden tests
 game.html        a small playable demo (output of make_game.cr8)
 ```

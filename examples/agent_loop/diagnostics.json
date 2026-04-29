@@ -1,0 +1,20 @@
+[
+    {
+        "severity": "error",
+        "line": 20,
+        "message": "record has no field `cusomer`",
+        "hint": "did you mean `customer`? available: amount, customer, id"
+    },
+    {
+        "severity": "error",
+        "line": 23,
+        "message": "record has no field `amout`",
+        "hint": "did you mean `amount`? available: amount, customer, id"
+    },
+    {
+        "severity": "error",
+        "line": 27,
+        "message": "record has no field `custmer`",
+        "hint": "did you mean `customer`? available: amount, customer, id"
+    }
+]

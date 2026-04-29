@@ -1,0 +1,23 @@
+# The corrected version of broken.cr8. Each typo from the diagnostics
+# (cusomer, amout, custmer) has been fixed using the static checker's
+# "did you mean" hint.
+#
+# Run:
+#   python3 cr8script.py --check-json examples/agent_loop/fixed.cr8   # []
+#   python3 cr8script.py            examples/agent_loop/fixed.cr8
+
+let first = { id: 101, customer: "Ada", amount: 12.50 }
+
+let orders = [
+  { id: 101, customer: "Ada",    amount: 12.50 },
+  { id: 102, customer: "Bob",    amount:  8.00 },
+  { id: 103, customer: "Carlos", amount: 99.00 },
+]
+
+show f"first customer: {first.customer}"
+
+let big_orders = orders | where it.amount is greater than 10
+show f"big orders: {length(big_orders)}"
+
+let labels = orders | map it.customer
+show f"labels: {labels}"
