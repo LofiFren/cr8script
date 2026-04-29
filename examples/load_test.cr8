@@ -1,4 +1,4 @@
-# load_test.cr8 — a simple HTTP load tester.
+# load_test.cr8 -- a simple HTTP load tester.
 #
 # Usage:
 #   cr8script load_test.cr8 <url> [runs]

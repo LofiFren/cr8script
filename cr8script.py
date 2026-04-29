@@ -146,7 +146,7 @@ def tokenize(src: str) -> list[Token]:
             i = j
             continue
 
-        # f-string: f"hello {name}" — emits a single FSTRING token whose value
+        # f-string: f"hello {name}" -- emits a single FSTRING token whose value
         # is a list of ("text", str) and ("expr", (source, line)) parts.
         if c == "f" and i + 1 < len(src) and src[i + 1] == '"':
             start_line = line
@@ -568,7 +568,7 @@ class Parser:
     def parse_if(self):
         if_tok = self.advance()  # if
         cond = self.parse_expr()
-        self.expect_kw("then", hint="`if <cond> then ... end` — did you forget `then`?")
+        self.expect_kw("then", hint="`if <cond> then ... end` -- did you forget `then`?")
         body = self.parse_block_until("else", "end")
         elifs = []
         else_ = []
@@ -642,7 +642,7 @@ class Parser:
         return Try_(body, err_name, otherwise, line=try_tok.line)
 
     # --- expressions ---
-    # Precedence (low → high):
+    # Precedence (low -> high):
     #   pipeline:    expr | verb ...
     #   or
     #   and
@@ -716,7 +716,7 @@ class Parser:
             self.expect_soft("by", hint="write `group by <field>` (e.g. `group by category`)")
             expr = self.parse_or()
             # When the group expression is a bare name, use it as the field
-            # name in the result records: `group by category` →
+            # name in the result records: `group by category` ->
             # `{category: ..., items: [...]}`. Otherwise fall back to `key`.
             group_key_name = expr.ident if isinstance(expr, Name) else None
             return PipelineStage("group", expr, field_scoped=True,
@@ -755,7 +755,7 @@ class Parser:
 
     def parse_compare(self):
         left = self.parse_add()
-        # consume one comparison; comparisons don't chain (a is b is c → not allowed)
+        # consume one comparison; comparisons don't chain (a is b is c -> not allowed)
         if self.check_kw("is"):
             is_tok = self.advance()
             # is not
@@ -875,7 +875,7 @@ class Parser:
 
     def _is_callable_target(self, node) -> bool:
         # Names and field-accesses can be callable. Don't accidentally treat
-        # `(1+2)` followed by `(3)` as a call — that's ambiguous, ban it.
+        # `(1+2)` followed by `(3)` as a call -- that's ambiguous, ban it.
         return isinstance(node, (Name, FieldAccess))
 
     def parse_call_args(self) -> list:
@@ -1078,7 +1078,7 @@ class PlainRecord:
 class _GroupRecord(PlainRecord):
     """Marker subclass produced by `| group by ...` so a following `summarize`
     knows to aggregate per-group instead of over the whole list. Renders the
-    same as PlainRecord — invisible to user code unless they introspect."""
+    same as PlainRecord -- invisible to user code unless they introspect."""
 
 
 class PlainFunc:
@@ -1225,7 +1225,7 @@ def _check_bool(v, line, where):
         raise PlainError(
             f"{where} must be true or false, got {type_name(v)} ({format_value(v)})",
             line=line,
-            hint="cr8script has no truthy/falsy values — use a real comparison like `x is greater than 0`",
+            hint="cr8script has no truthy/falsy values -- use a real comparison like `x is greater than 0`",
         )
     return v
 
@@ -1366,7 +1366,7 @@ def _eval_binop(n: BinOp, env: Env):
         if (isinstance(left, str) and not isinstance(right, str)) or \
            (isinstance(right, str) and not isinstance(left, str)):
             raise PlainError(
-                f"can't add {type_name(left)} and {type_name(right)} — "
+                f"can't add {type_name(left)} and {type_name(right)} -- "
                 f"`+` won't silently mix types",
                 line=n.line,
                 hint=f"convert it explicitly: e.g. `to_text({format_value(right) if isinstance(left, str) else format_value(left)})`",
@@ -1686,7 +1686,7 @@ def _scope_for_item(parent: Env, item) -> Env:
     inner.define("it", item, mutable=False)
     if isinstance(item, PlainRecord):
         for k, v in item.fields.items():
-            # Don't shadow `it` and don't override existing names — record fields
+            # Don't shadow `it` and don't override existing names -- record fields
             # take precedence over outer-scope names in pipeline expressions.
             try:
                 inner.define(k, v, mutable=False)
@@ -2029,7 +2029,7 @@ def _m_pow(args, line):
     a = _check_number(args[0], line, "math.pow base")
     b = _check_number(args[1], line, "math.pow exponent")
     if b == b.to_integral_value():
-        # Exact integer exponent — stay in Decimal land.
+        # Exact integer exponent -- stay in Decimal land.
         return a ** int(b)
     # Fractional exponent: fall back to binary float math, then re-import
     # via repr() so the shortest faithful decimal representation wins.
@@ -2257,7 +2257,7 @@ def _c_write(args, line):
                 row.append(format_value(v))
             else:
                 raise PlainError(
-                    f"csv.write can't write {type_name(v)} ({format_value(v)}) — "
+                    f"csv.write can't write {type_name(v)} ({format_value(v)}) -- "
                     f"only text, numbers, true/false, and nothing fit in a CSV cell",
                     line=line,
                 )
@@ -2425,7 +2425,7 @@ class Checker:
         self.issues: list[_CheckIssue] = []
         self.scope: list[dict] = [{}]
         # Counter for "permissive" frames where bare-name validation is
-        # skipped — pipeline / summarize stages whose item shape isn't
+        # skipped -- pipeline / summarize stages whose item shape isn't
         # statically known. Bare names there might resolve at runtime to
         # fields we couldn't determine, so we shouldn't flag them.
         self.permissive_depth: int = 0
@@ -2466,7 +2466,7 @@ class Checker:
         # Pre-pass: register top-level function names so mutual recursion
         # and forward references (a function that calls one defined later
         # in the file) don't false-positive against the bare-name check.
-        # Top-level `let` bindings are *not* pre-registered — `let x = x`
+        # Top-level `let` bindings are *not* pre-registered -- `let x = x`
         # should still flag x as undefined.
         for s in stmts:
             if type(s) is FuncDef:
@@ -2484,7 +2484,7 @@ class Checker:
             return
         if t is Assign:
             self.check_expr(node.value)
-            # Mutable rebinds lose tracked shape — be conservative.
+            # Mutable rebinds lose tracked shape -- be conservative.
             for s in self.scope:
                 if node.name in s:
                     s[node.name] = None
@@ -2526,7 +2526,7 @@ class Checker:
             self.check_expr(node.value)
             return
         if t is Try_:
-            # Walk into `try` bodies — a typo wrapped in `try` is still a typo.
+            # Walk into `try` bodies -- a typo wrapped in `try` is still a typo.
             # Programs that genuinely *want* a missing field can use indexing
             # (`r["x"]`), which returns nothing rather than erroring.
             self.push()
@@ -2628,7 +2628,7 @@ class Checker:
         item_shape = src_shape.item if isinstance(src_shape, _ListShape) else None
         # `pre_group_shape` is what `summarize` sees as the per-group
         # items' element shape. Set whenever we last had a flat list of
-        # records — `group by` records the pre-group shape so a later
+        # records -- `group by` records the pre-group shape so a later
         # `summarize` resolves bare names against the original fields.
         pre_group_shape = item_shape
         for stage in node.stages:
@@ -2669,7 +2669,7 @@ class Checker:
                 self.check_expr(stage.arg)
             # Update the tracked item shape for the next stage.
             if stage.verb == "map" and isinstance(stage.arg, Name) and isinstance(item_shape, _RecordShape):
-                item_shape = None  # projected scalar — no record shape
+                item_shape = None  # projected scalar -- no record shape
                 pre_group_shape = None
             elif stage.verb == "group":
                 key_name = stage.group_key_name or "key"
@@ -2684,7 +2684,7 @@ class Checker:
 
     def _check_pipeline_stage_expr(self, expr, item_shape):
         # When a bare Name in a field-scoped stage expression matches one of
-        # the item's fields, that's a valid reference — don't flag it.
+        # the item's fields, that's a valid reference -- don't flag it.
         # Otherwise we walk normally so typos in `.field` chains still surface.
         if expr is None:
             return
@@ -2700,7 +2700,7 @@ class Checker:
         if t is List_:
             elem_shapes = [self.shape_of(x) for x in node.items]
             if elem_shapes and all(isinstance(s, _RecordShape) for s in elem_shapes):
-                # Intersection of fields — only fields present in *every*
+                # Intersection of fields -- only fields present in *every*
                 # element are guaranteed.
                 common: Optional[set] = None
                 for s in elem_shapes:
@@ -2765,7 +2765,7 @@ def run_check(src: str, filename: str = "<input>", as_json: bool = False) -> int
         for i in chk.issues:
             print(f"{filename}: {i.format_friendly()}", file=sys.stderr)
         if not chk.issues:
-            print(f"{filename}: ok — no issues", file=sys.stderr)
+            print(f"{filename}: ok -- no issues", file=sys.stderr)
     return 1 if has_error else 0
 
 
@@ -2787,7 +2787,7 @@ def run_source(src: str, filename: str = "<input>") -> int:
 
 def repl():
     env = make_global_env()
-    print("cr8script REPL — type expressions or statements; Ctrl-D to exit.")
+    print("cr8script REPL -- type expressions or statements; Ctrl-D to exit.")
     buf = ""
     prompt = ">>> "
     while True:
@@ -2797,7 +2797,7 @@ def repl():
             print()
             return
         buf = (buf + "\n" + line).strip() if buf else line
-        # Try to parse — if it fails because of EOF mid-block, continue reading.
+        # Try to parse -- if it fails because of EOF mid-block, continue reading.
         try:
             tokens = tokenize(buf + "\n")
             stmts = Parser(tokens).parse_program()

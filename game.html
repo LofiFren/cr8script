@@ -30,7 +30,7 @@
 </head>
 <body>
 <h1>🍪 Cookie Catcher 🍪</h1>
-<div class='hint'>Move with <b>← →</b> (or <b>A / D</b>). Catch 🍪 (+10) and ⭐ (+50). Avoid 💣. Press <b>R</b> to restart.</div>
+<div class='hint'>Move with <b><- -></b> (or <b>A / D</b>). Catch 🍪 (+10) and ⭐ (+50). Avoid 💣. Press <b>R</b> to restart.</div>
 <canvas id='game' width='600' height='500' tabindex='0'></canvas>
 <footer>built from a cr8script</footer>
 <script>
@@ -163,7 +163,7 @@
     ctx.fillText('Best: ' + best, 14, 38);
     ctx.fillStyle = 'white';
     ctx.font = '22px serif';
-    ctx.fillText('❤️'.repeat(Math.max(0, lives)), W - 130, 12);
+    ctx.fillText('❤'.repeat(Math.max(0, lives)), W - 130, 12);
 
     if (gameOver) {
       ctx.fillStyle = 'rgba(0,0,0,0.7)';

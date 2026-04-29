@@ -1,4 +1,4 @@
-# A small report over a list of orders. Intentionally broken — three
+# A small report over a list of orders. Intentionally broken -- three
 # classic typos an LLM will produce. The static checker catches all
 # three before the program runs:
 #
@@ -20,7 +20,7 @@ let orders = [
 show f"first customer: {first.cusomer}"
 
 # Bug 2: bare-name typo inside a pipeline filter. Inside `where`, bare
-# names auto-resolve to fields of each row — so `amout` is checked
+# names auto-resolve to fields of each row -- so `amout` is checked
 # against the row shape and flagged.
 let big_orders = orders | where amout is greater than 10
 show f"big orders: {length(big_orders)}"

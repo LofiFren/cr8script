@@ -1,6 +1,6 @@
 # Validate a list of records against a small schema. Emits a result
 # of the form { ok, errors }, where errors is a list of
-# { index, field, message } records — one entry per failing field.
+# { index, field, message } records -- one entry per failing field.
 #
 # This is the agent-loop primitive: when an LLM upstream produces
 # structured data, run this kind of check before trusting it. Every
@@ -18,7 +18,7 @@ let people = [
 ]
 
 # A validator is just a function that returns a list of error records.
-# We use `r.get("key")` for safe access — `r.field` would error on a
+# We use `r.get("key")` for safe access -- `r.field` would error on a
 # missing field, which is wrong for *checking* whether it exists.
 to validate_person(r, i)
   var errors = []
@@ -58,10 +58,10 @@ end
 
 let result = validate_all(people)
 
-show f"checked {length(people)} record(s) — ok: {result.ok}"
+show f"checked {length(people)} record(s) -- ok: {result.ok}"
 show f"errors: {length(result.errors)}"
 for each e in result.errors
-  show f"  record #{e.index} field={e.field} — {e.message}"
+  show f"  record #{e.index} field={e.field} -- {e.message}"
 end
 
 # Round-trip the diagnostics as JSON so a calling agent can parse them.

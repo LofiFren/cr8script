@@ -1,4 +1,4 @@
-# AGENTS.md — running cr8script inside an LLM agent
+# AGENTS.md -- running cr8script inside an LLM agent
 
 Drop this file (or excerpts from it) into your agent's system prompt or
 tool-use loop to teach a model cr8script in one shot. It is the
@@ -8,8 +8,8 @@ agent's scripting target**.
 
 ## Why an agent should pick cr8script
 
-When a model writes a quick script — to ingest JSON, summarize a list,
-emit a report — the failure modes are predictable:
+When a model writes a quick script -- to ingest JSON, summarize a list,
+emit a report -- the failure modes are predictable:
 
 - silent type coercion (`"5" + 3` "works" in Python, then later math goes wrong)
 - truthy/falsy surprises (`if 0 then` skipped, `if [] then` skipped)
@@ -56,10 +56,10 @@ A working end-to-end demo is at [`examples/agent_loop/`](examples/agent_loop/).
 >
 > Before claiming a script works, run
 > `python3 cr8script.py --check-json file.cr8` and fix every issue in
-> the JSON output. Each issue has `{line, message, hint}` — apply the
+> the JSON output. Each issue has `{line, message, hint}` -- apply the
 > hint, re-check, repeat until the list is empty. Then run the script.
 >
-> Hard rules — these are errors, not warnings:
+> Hard rules -- these are errors, not warnings:
 >
 > - Use `is`, `is not`, `is greater than`, `is less than`, `is at
 >   least`, `is at most`. **Never** `==`, `!=`, `>=`, `<=`.
@@ -69,7 +69,7 @@ A working end-to-end demo is at [`examples/agent_loop/`](examples/agent_loop/).
 >   `if [] then` are all errors.
 > - Records are values. `r.field` requires the field to exist. Use
 >   `r.get("key")` for safe lookup (returns `nothing` on miss).
-> - Only `nothing` for absence — no `null`, `None`, `undefined`.
+> - Only `nothing` for absence -- no `null`, `None`, `undefined`.
 > - `let` is immutable. Reassignment requires `var`.
 > - Pipelines (`|`) only operate on lists. Verbs are `where`, `sort
 >   by`, `take`, `map`, `group by`, `summarize`. Inside `where` /
@@ -79,7 +79,7 @@ A working end-to-end demo is at [`examples/agent_loop/`](examples/agent_loop/).
 > The full reference is in `LLMS.md`. The end-to-end self-correction
 > loop demo is in `examples/agent_loop/`.
 
-(That block is ~30 lines and ~370 tokens — small enough to live
+(That block is ~30 lines and ~370 tokens -- small enough to live
 permanently in a system prompt.)
 
 ## Tool definitions
@@ -135,12 +135,12 @@ python3 /path/to/cr8script.py "$path"
 ## Canonical examples for context
 
 If your model is small and you want to seed it with idioms in-context,
-include one of these — pick by task shape:
+include one of these -- pick by task shape:
 
 | Task | Read first |
 |------|------------|
-| Anything new | [`examples/tour.cr8`](examples/tour.cr8) — the whole language in 92 lines |
-| Self-correction loop demo | [`examples/agent_loop/`](examples/agent_loop/) — broken → diagnostics → fixed |
+| Anything new | [`examples/tour.cr8`](examples/tour.cr8) -- the whole language in 92 lines |
+| Self-correction loop demo | [`examples/agent_loop/`](examples/agent_loop/) -- broken -> diagnostics -> fixed |
 | Fetch JSON, transform, write CSV | [`examples/api_ingest.cr8`](examples/api_ingest.cr8) |
 | Validate a list of records | [`examples/validate.cr8`](examples/validate.cr8) |
 | Emit a markdown report | [`examples/report_md.cr8`](examples/report_md.cr8) |
@@ -160,5 +160,5 @@ Don't push the model toward cr8script for:
   list (`math`, `http`, `time`, `json`, `csv`) is the surface.
 
 For those, your agent should produce Python or a real shell pipeline
-instead. cr8script's win is **per-script reliability** — the loop
+instead. cr8script's win is **per-script reliability** -- the loop
 above terminates fast when the task fits.

@@ -1,0 +1,269 @@
+{
+  "title": "Skybound Ember",
+  "task_kind": "html_game",
+  "summary": "Generate a browser-playable hot air balloon game from a cr8script build script, with deterministic browser checks for scoring, damage, fuel use, and reset.",
+  "nodes": [
+    {
+      "id": "goal",
+      "kind": "goal",
+      "label": "Build a browser-playable hot air balloon game",
+      "details": [
+        "use a .cr8 build script as the source artifact",
+        "generate a self-contained HTML page",
+        "make the game testable in the browser"
+      ],
+      "tags": ["product", "llm-map"]
+    },
+    {
+      "id": "artifact_cr8",
+      "kind": "artifact",
+      "label": "examples/make_balloon_game.cr8",
+      "details": [
+        "generator emits HTML, CSS, and JavaScript",
+        "canonical source file for the game"
+      ],
+      "tags": ["artifact", "source"]
+    },
+    {
+      "id": "artifact_html",
+      "kind": "artifact",
+      "label": "balloon_game.html",
+      "details": [
+        "generated browser artifact",
+        "self-contained and openable without bundling"
+      ],
+      "tags": ["artifact", "output"]
+    },
+    {
+      "id": "input_controls",
+      "kind": "input",
+      "label": "Player controls",
+      "details": [
+        "left and right steer with arrows or A/D",
+        "burner climbs with Space, Up, or W",
+        "tap or pointer input is supported"
+      ],
+      "tags": ["input", "controls"]
+    },
+    {
+      "id": "input_state",
+      "kind": "input",
+      "label": "Core state",
+      "details": [
+        "lives start at 3",
+        "fuel starts full",
+        "score and best score are tracked"
+      ],
+      "tags": ["input", "state"]
+    },
+    {
+      "id": "input_canvas",
+      "kind": "input",
+      "label": "Browser canvas scene",
+      "details": [
+        "fixed logical canvas size",
+        "responsive page shell around the canvas",
+        "no external runtime dependencies"
+      ],
+      "tags": ["input", "ui"]
+    },
+    {
+      "id": "transform_physics",
+      "kind": "transform",
+      "label": "Update balloon physics",
+      "details": [
+        "apply gravity each frame",
+        "apply burner thrust only when fuel is available",
+        "clamp motion within the play area"
+      ],
+      "tags": ["runtime", "gameplay"]
+    },
+    {
+      "id": "transform_spawns",
+      "kind": "transform",
+      "label": "Spawn world entities",
+      "details": [
+        "spawn rings, stars, fuel canisters, storms, and birds",
+        "increase pace as the run continues",
+        "move entities across the playfield"
+      ],
+      "tags": ["runtime", "content"]
+    },
+    {
+      "id": "decision_collisions",
+      "kind": "decision",
+      "label": "Resolve collisions by entity type",
+      "details": [
+        "ring adds score",
+        "star adds score",
+        "fuel restores burner capacity",
+        "storm and bird remove a life"
+      ],
+      "tags": ["runtime", "rules"]
+    },
+    {
+      "id": "decision_gameover",
+      "kind": "decision",
+      "label": "Enter game-over state when lives reach zero",
+      "details": [
+        "freeze active progression",
+        "persist best score",
+        "allow restart by key or tap"
+      ],
+      "tags": ["runtime", "rules"]
+    },
+    {
+      "id": "transform_render",
+      "kind": "transform",
+      "label": "Render the game frame",
+      "details": [
+        "draw sky, terrain, and atmospheric details",
+        "draw balloon, entities, and particles",
+        "draw HUD and game-over overlay"
+      ],
+      "tags": ["render", "ui"]
+    },
+    {
+      "id": "transform_debug_api",
+      "kind": "transform",
+      "label": "Expose deterministic debug hooks",
+      "details": [
+        "spawn forced entities",
+        "step the simulation manually",
+        "read state for browser assertions"
+      ],
+      "tags": ["testing", "debug"]
+    },
+    {
+      "id": "risk_blank_page",
+      "kind": "risk",
+      "label": "Blank-page code generation is expensive for LLMs",
+      "details": [
+        "too much free-form HTML and JS generation",
+        "hard to inspect without an intermediate plan"
+      ],
+      "tags": ["llm", "planning"]
+    },
+    {
+      "id": "risk_collision_bug",
+      "kind": "risk",
+      "label": "Collision handling may score or damage incorrectly",
+      "details": [
+        "wrong score increments",
+        "hazards not decrementing lives",
+        "collectibles not being removed"
+      ],
+      "tags": ["gameplay", "correctness"]
+    },
+    {
+      "id": "risk_reset_bug",
+      "kind": "risk",
+      "label": "Reset may fail to restore the start state",
+      "details": [
+        "lives, fuel, and entity lists must reset",
+        "game-over flag must clear"
+      ],
+      "tags": ["state", "correctness"]
+    },
+    {
+      "id": "output_playable",
+      "kind": "output",
+      "label": "Playable game page",
+      "details": [
+        "user can steer and climb",
+        "user can collect and avoid entities",
+        "page renders cleanly in the browser"
+      ],
+      "tags": ["output", "ux"]
+    },
+    {
+      "id": "output_hud",
+      "kind": "output",
+      "label": "Visible score, lives, and fuel HUD",
+      "details": [
+        "score should update over play",
+        "fuel should visibly drop while burning",
+        "lives should reflect damage"
+      ],
+      "tags": ["output", "ux"]
+    },
+    {
+      "id": "check_checker",
+      "kind": "check",
+      "label": "cr8 checker passes",
+      "details": [
+        "run python3 cr8script.py --check examples/make_balloon_game.cr8"
+      ],
+      "tags": ["check", "static"]
+    },
+    {
+      "id": "check_ring",
+      "kind": "check",
+      "label": "Forced ring collision increases score",
+      "details": [
+        "inject a ring near the player",
+        "step the simulation",
+        "assert score rose"
+      ],
+      "tags": ["check", "browser"]
+    },
+    {
+      "id": "check_storm",
+      "kind": "check",
+      "label": "Forced storm collision reduces lives",
+      "details": [
+        "inject a storm near the player",
+        "step the simulation",
+        "assert lives dropped"
+      ],
+      "tags": ["check", "browser"]
+    },
+    {
+      "id": "check_burner",
+      "kind": "check",
+      "label": "Burner input climbs and consumes fuel",
+      "details": [
+        "hold burner input through the debug API",
+        "assert player y moves upward",
+        "assert fuel decreases"
+      ],
+      "tags": ["check", "browser"]
+    },
+    {
+      "id": "check_reset",
+      "kind": "check",
+      "label": "Reset restores start state",
+      "details": [
+        "reach game over",
+        "reset through the debug API",
+        "assert lives, fuel, and flags are restored"
+      ],
+      "tags": ["check", "browser"]
+    }
+  ],
+  "edges": [
+    { "from": "goal", "to": "artifact_cr8", "kind": "produces", "label": "planned source artifact" },
+    { "from": "artifact_cr8", "to": "artifact_html", "kind": "produces", "label": "generator output" },
+    { "from": "input_controls", "to": "transform_physics", "kind": "feeds", "label": "movement and burner input" },
+    { "from": "input_state", "to": "transform_physics", "kind": "feeds", "label": "lives and fuel state" },
+    { "from": "input_canvas", "to": "transform_render", "kind": "feeds", "label": "scene dimensions and presentation" },
+    { "from": "transform_physics", "to": "decision_collisions", "kind": "feeds", "label": "player position" },
+    { "from": "transform_spawns", "to": "decision_collisions", "kind": "feeds", "label": "entity positions" },
+    { "from": "decision_collisions", "to": "decision_gameover", "kind": "feeds", "label": "life loss may end the run" },
+    { "from": "transform_physics", "to": "transform_render", "kind": "feeds", "label": "draw balloon state" },
+    { "from": "transform_spawns", "to": "transform_render", "kind": "feeds", "label": "draw entities" },
+    { "from": "decision_collisions", "to": "transform_render", "kind": "feeds", "label": "draw score and damage outcomes" },
+    { "from": "decision_gameover", "to": "transform_render", "kind": "feeds", "label": "draw game-over overlay" },
+    { "from": "transform_debug_api", "to": "check_ring", "kind": "verifies", "label": "inject and step for score assertion" },
+    { "from": "transform_debug_api", "to": "check_storm", "kind": "verifies", "label": "inject and step for damage assertion" },
+    { "from": "transform_debug_api", "to": "check_burner", "kind": "verifies", "label": "simulate burner input" },
+    { "from": "transform_debug_api", "to": "check_reset", "kind": "verifies", "label": "force game-over and reset" },
+    { "from": "risk_blank_page", "to": "artifact_cr8", "kind": "guards", "label": "map should reduce open-ended generation" },
+    { "from": "risk_collision_bug", "to": "check_ring", "kind": "verifies", "label": "score path check" },
+    { "from": "risk_collision_bug", "to": "check_storm", "kind": "verifies", "label": "damage path check" },
+    { "from": "risk_reset_bug", "to": "check_reset", "kind": "verifies", "label": "restart invariants" },
+    { "from": "artifact_html", "to": "output_playable", "kind": "produces", "label": "browser page" },
+    { "from": "transform_render", "to": "output_hud", "kind": "produces", "label": "visible state" },
+    { "from": "artifact_cr8", "to": "check_checker", "kind": "verifies", "label": "static language correctness" }
+  ]
+}

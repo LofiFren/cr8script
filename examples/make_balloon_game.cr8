@@ -1,16 +1,16 @@
-# Skybound Ember — generate a self-contained browser game.
+# Skybound Ember -- generate a self-contained browser game.
 #
 # Run:
 #   python3 cr8script.py examples/make_balloon_game.cr8 > balloon_game.html
 # Then open balloon_game.html in any browser.
 #
 # How the game plays:
-#   • Use ← → (or A / D) to steer sideways
-#   • Hold Space / ↑ / W to fire the burner and climb
-#   • Fly through glowing rings and collect stars for score
-#   • Grab fuel canisters to keep the burner alive
-#   • Avoid storm clouds and birds
-#   • Press R (or tap the canvas) to restart after game over
+#   * Use <- -> (or A / D) to steer sideways
+#   * Hold Space / ↑ / W to fire the burner and climb
+#   * Fly through glowing rings and collect stars for score
+#   * Grab fuel canisters to keep the burner alive
+#   * Avoid storm clouds and birds
+#   * Press R (or tap the canvas) to restart after game over
 #
 # This file is the build script: cr8script emits one full HTML page.
 
@@ -136,7 +136,7 @@ show "    <div class='eyebrow'>cr8script browser game</div>"
 show f"    <h1>{title}</h1>"
 show "    <div class='deck'>"
 show "      <div>Ride a hand-painted hot air balloon through the evening thermals. Keep the burner fed, thread the glowing hoops, and survive the weather.</div>"
-show "      <div>Controls: <b>← → / A D</b> steer, <b>Space / ↑ / W</b> climbs, and <b>R</b> restarts after a crash.</div>"
+show "      <div>Controls: <b><- -> / A D</b> steer, <b>Space / ↑ / W</b> climbs, and <b>R</b> restarts after a crash.</div>"
 show "    </div>"
 show "    <div class='legend'>"
 show "      <span>⭕ Ring: +25</span>"

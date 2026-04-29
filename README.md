@@ -4,10 +4,10 @@ An English-shaped scripting language for LLMs and anyone who wants quick
 scripts without Python's footguns. One file. No build. No imports. Reads
 the way you'd describe the work out loud.
 
-Website: [cr8script.com](https://cr8script.com) — language tour, animated
+Website: [cr8script.com](https://cr8script.com) -- language tour, animated
 atlas, and a playable demo.
 
-![cr8script atlas — a mindmap of the language](mindmap.jpg)
+![cr8script atlas -- a mindmap of the language](mindmap.jpg)
 
 ## Quick start
 
@@ -59,7 +59,7 @@ gadget: 8 across 1 order(s)
   mean" hint.
 - **Immutable by default.** `let` is forever; `var` opts into change.
 - **Pipelines as a first-class verb set.** `where`, `sort by`, `take`,
-  `map`, `group by`, `summarize` — bare names inside resolve to record
+  `map`, `group by`, `summarize` -- bare names inside resolve to record
   fields.
 - **Errors that teach.** Every error names the line, the value, and a
   one-line hint.
@@ -70,12 +70,16 @@ gadget: 8 across 1 order(s)
 
 Three files are aimed at agents and the humans wiring them up:
 
-- [`LLMS.md`](LLMS.md) — condensed grammar + rules sheet. Read this first.
-- [`AGENTS.md`](AGENTS.md) — system-prompt template, tool definitions,
+- [`LLMS.md`](LLMS.md) -- condensed grammar + rules sheet. Read this first.
+- [`AGENTS.md`](AGENTS.md) -- system-prompt template, tool definitions,
   and the self-correction loop spelled out for an integrator.
-- [`examples/agent_loop/`](examples/agent_loop/) — a broken `.cr8` file,
+- [`LLM_MAP.md`](LLM_MAP.md) -- typed planning-graph layer that can sit
+  between prompt and `.cr8` generation.
+- [`examples/agent_loop/`](examples/agent_loop/) -- a broken `.cr8` file,
   the actual `--check-json` JSON output, and the corrected version.
-  The end-to-end demo of cr8 → diagnostics → fix.
+  The end-to-end demo of cr8 -> diagnostics -> fix.
+- [`examples/llm_map/`](examples/llm_map/) -- a first LLM-map prototype
+  and rendered HTML view for the hot air balloon game.
 
 The self-correction loop:
 
@@ -88,7 +92,7 @@ python3 cr8script.py file.cr8                  # run
 
 v1.1. Single-file Python interpreter (`cr8script.py`, ~2.8k lines):
 lexer, parser, tree-walking evaluator, REPL, static checker, ten golden
-tests. The *language* is independent of Python — only the bootstrap is.
+tests. The *language* is independent of Python -- only the bootstrap is.
 
 Built-in modules: `math`, `http`, `time`, `json`, `csv`. Top-level:
 `length`, `sum`, `count`, `average`, `min`, `max`, `range`, `to_text`,
@@ -105,12 +109,18 @@ objects).
 cr8script.py     single-file interpreter
 LLMS.md          rules-and-grammar sheet for LLMs
 AGENTS.md        system-prompt template + agent tool definitions
+LLM_MAP.md       typed planning-graph format for LLM-first workflows
+BENCHMARKS.md    benchmark plan focused on tokens-to-correctness
 examples/
   hello, tour, load_test, make_game, make_mindmap
-  agent_loop/    broken → diagnostics → fixed (the LLM self-correction demo)
+  agent_loop/    broken -> diagnostics -> fixed (the LLM self-correction demo)
+  llm_map/       JSON planning graph + rendered HTML prototype
   api_ingest     fetch JSON, summarize, emit CSV
-  validate       list of records → { ok, errors } per item
-  report_md      structured data → markdown report
+  validate       list of records -> { ok, errors } per item
+  report_md      structured data -> markdown report
+tools/
+  render_llm_map.py   map JSON -> self-contained HTML/SVG view
+  check_map.py        validate map JSON; check map<->code drift
 testdata/        golden tests
 game.html        a small playable demo (output of make_game.cr8)
 ```

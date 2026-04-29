@@ -1,0 +1,840 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Skybound Ember * LLM map</title>
+  <style>
+    :root {
+      --bg-top: #0d1528;
+      --bg-bottom: #0a0f1d;
+      --panel: rgba(255, 249, 235, 0.92);
+      --ink: #182033;
+      --muted: #60708a;
+      --line: rgba(255,255,255,0.08);
+    }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; min-height: 100%; }
+    body {
+      font-family: "Avenir Next", "Trebuchet MS", "Segoe UI", sans-serif;
+      color: #eef2fb;
+      background:
+        radial-gradient(circle at top, rgba(130,160,220,0.28), transparent 26%),
+        linear-gradient(180deg, var(--bg-top), var(--bg-bottom));
+      padding: 24px;
+    }
+    .shell {
+      display: grid;
+      gap: 18px;
+      width: min(100%, 2120px);
+      margin: 0 auto;
+    }
+    .intro {
+      display: grid;
+      gap: 10px;
+      padding: 18px 22px;
+      border-radius: 24px;
+      background: rgba(255,255,255,0.08);
+      border: 1px solid rgba(255,255,255,0.12);
+      box-shadow: 0 18px 48px rgba(0,0,0,0.28);
+      backdrop-filter: blur(10px);
+    }
+    .eyebrow {
+      font-size: 12px;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      color: #d3deff;
+      font-weight: 700;
+    }
+    h1 {
+      margin: 0;
+      font-size: clamp(2rem, 4vw, 3.4rem);
+      line-height: 0.94;
+      font-family: Georgia, "Times New Roman", serif;
+      letter-spacing: -0.03em;
+    }
+    .summary {
+      max-width: 1050px;
+      color: rgba(238,242,251,0.86);
+      font-size: 16px;
+    }
+    .meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      font-size: 13px;
+    }
+    .meta span {
+      border-radius: 999px;
+      padding: 7px 10px;
+      background: rgba(255,255,255,0.1);
+      border: 1px solid rgba(255,255,255,0.12);
+    }
+    .canvas-card {
+      overflow: auto;
+      border-radius: 26px;
+      background: linear-gradient(180deg, rgba(255,255,255,0.12), rgba(255,255,255,0.08));
+      border: 1px solid rgba(255,255,255,0.12);
+      box-shadow: 0 24px 64px rgba(0,0,0,0.28);
+      padding: 16px;
+    }
+    svg {
+      display: block;
+      width: 100%;
+      min-width: 1400px;
+      height: auto;
+      background:
+        radial-gradient(circle at top, rgba(255,255,255,0.04), transparent 26%),
+        linear-gradient(180deg, rgba(13,21,40,0.94), rgba(10,15,29,0.98));
+      border-radius: 20px;
+    }
+    .lane-title {
+      fill: #f5f0e2;
+      font-size: 16px;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+    .lane-bg {
+      fill: rgba(255,255,255,0.03);
+      stroke: rgba(255,255,255,0.07);
+      stroke-width: 1;
+    }
+    .card {
+      fill: var(--panel);
+      stroke: rgba(24,32,51,0.12);
+      stroke-width: 1;
+      filter: drop-shadow(0 16px 22px rgba(0,0,0,0.16));
+    }
+    .kind {
+      fill: #433929;
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: 0.09em;
+      text-transform: uppercase;
+    }
+    .label {
+      fill: var(--ink);
+      font-size: 18px;
+      font-weight: 800;
+    }
+    .detail {
+      fill: #31405a;
+      font-size: 13px;
+    }
+    .tag {
+      fill: var(--muted);
+      font-size: 11px;
+      font-weight: 700;
+    }
+    .edge-label {
+      fill: rgba(236,241,251,0.82);
+      font-size: 11px;
+      text-anchor: middle;
+      paint-order: stroke;
+      stroke: rgba(10,15,29,0.9);
+      stroke-width: 4px;
+      stroke-linejoin: round;
+    }
+    details {
+      border-radius: 18px;
+      background: rgba(255,255,255,0.07);
+      border: 1px solid rgba(255,255,255,0.1);
+      padding: 12px 14px;
+    }
+    summary {
+      cursor: pointer;
+      font-weight: 700;
+    }
+    pre {
+      margin: 12px 0 0;
+      white-space: pre-wrap;
+      color: #dbe5ff;
+      font-size: 12px;
+      line-height: 1.45;
+    }
+  </style>
+</head>
+<body>
+  <main class="shell">
+    <section class="intro">
+      <div class="eyebrow">cr8script LLM map prototype</div>
+      <h1>Skybound Ember</h1>
+      <div class="summary">Generate a browser-playable hot air balloon game from a cr8script build script, with deterministic browser checks for scoring, damage, fuel use, and reset.</div>
+      <div class="meta">
+        <span>task kind: <b>html_game</b></span>
+        <span>22 nodes</span>
+        <span>23 edges</span>
+        <span>2D typed planning graph</span>
+      </div>
+    </section>
+    <section class="canvas-card">
+      <svg width="2194" height="1134" viewBox="0 0 2194 1134" role="img" aria-label="LLM map for Skybound Ember">
+        <defs>
+          <marker id="arrow" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse">
+            <path d="M0,0 L12,6 L0,12 Z" fill="rgba(235,240,252,0.85)" />
+          </marker>
+        </defs>
+        <rect x='52' y='136' width='256' height='958' rx='28' class='lane-bg' />
+<text x='60' y='118' class='lane-title'>Goal</text><rect x='314' y='136' width='256' height='958' rx='28' class='lane-bg' />
+<text x='322' y='118' class='lane-title'>Inputs</text><rect x='576' y='136' width='256' height='958' rx='28' class='lane-bg' />
+<text x='584' y='118' class='lane-title'>Transforms</text><rect x='838' y='136' width='256' height='958' rx='28' class='lane-bg' />
+<text x='846' y='118' class='lane-title'>Decisions</text><rect x='1100' y='136' width='256' height='958' rx='28' class='lane-bg' />
+<text x='1108' y='118' class='lane-title'>Risks</text><rect x='1362' y='136' width='256' height='958' rx='28' class='lane-bg' />
+<text x='1370' y='118' class='lane-title'>Outputs</text><rect x='1624' y='136' width='256' height='958' rx='28' class='lane-bg' />
+<text x='1632' y='118' class='lane-title'>Checks</text><rect x='1886' y='136' width='256' height='958' rx='28' class='lane-bg' />
+<text x='1894' y='118' class='lane-title'>Artifacts</text>
+        <path d="M300.0,273.0 C1017.3,273.0 1176.7,264.0 1894.0,264.0" stroke='#e7a75b' stroke-width='2' fill='none' opacity='0.42' marker-end='url(#arrow)' />
+<text x='1097.0' y='262.5' class='edge-label'>planned source artifact</text><path d="M2134.0,264.0 C2182.0,264.0 1846.0,430.0 1894.0,430.0" stroke='#c8c2a8' stroke-width='2' fill='none' opacity='0.42' marker-end='url(#arrow)' />
+<text x='2014.0' y='341.0' class='edge-label'>generator output</text><path d="M562.0,273.0 C610.0,273.0 536.0,273.0 584.0,273.0" stroke='#7ab6d8' stroke-width='2' fill='none' opacity='0.42' marker-end='url(#arrow)' />
+<text x='573.0' y='267.0' class='edge-label'>movement and burner input</text><path d="M562.0,457.0 C610.0,457.0 536.0,273.0 584.0,273.0" stroke='#7ab6d8' stroke-width='2' fill='none' opacity='0.42' marker-end='url(#arrow)' />
+<text x='573.0' y='359.0' class='edge-label'>lives and fuel state</text><path d="M562.0,641.0 C610.0,641.0 536.0,641.0 584.0,641.0" stroke='#7ab6d8' stroke-width='2' fill='none' opacity='0.42' marker-end='url(#arrow)' />
+<text x='573.0' y='635.0' class='edge-label'>scene dimensions and presentation</text><path d="M824.0,273.0 C872.0,273.0 798.0,282.0 846.0,282.0" stroke='#70c19f' stroke-width='2' fill='none' opacity='0.42' marker-end='url(#arrow)' />
+<text x='835.0' y='271.5' class='edge-label'>player position</text><path d="M824.0,457.0 C872.0,457.0 798.0,282.0 846.0,282.0" stroke='#70c19f' stroke-width='2' fill='none' opacity='0.42' marker-end='url(#arrow)' />
+<text x='835.0' y='363.5' class='edge-label'>entity positions</text><path d="M1086.0,282.0 C1134.0,282.0 798.0,475.0 846.0,475.0" stroke='#9aa4ff' stroke-width='2' fill='none' opacity='0.42' marker-end='url(#arrow)' />
+<text x='966.0' y='372.5' class='edge-label'>life loss may end the run</text><path d="M824.0,273.0 C872.0,273.0 536.0,641.0 584.0,641.0" stroke='#70c19f' stroke-width='2' fill='none' opacity='0.42' marker-end='url(#arrow)' />
+<text x='704.0' y='451.0' class='edge-label'>draw balloon state</text><path d="M824.0,457.0 C872.0,457.0 536.0,641.0 584.0,641.0" stroke='#70c19f' stroke-width='2' fill='none' opacity='0.42' marker-end='url(#arrow)' />
+<text x='704.0' y='543.0' class='edge-label'>draw entities</text><path d="M1086.0,282.0 C1134.0,282.0 536.0,641.0 584.0,641.0" stroke='#9aa4ff' stroke-width='2' fill='none' opacity='0.42' marker-end='url(#arrow)' />
+<text x='835.0' y='455.5' class='edge-label'>draw score and damage outcomes</text><path d="M1086.0,475.0 C1134.0,475.0 536.0,641.0 584.0,641.0" stroke='#9aa4ff' stroke-width='2' fill='none' opacity='0.42' marker-end='url(#arrow)' />
+<text x='835.0' y='552.0' class='edge-label'>draw game-over overlay</text><path d="M824.0,825.0 C1187.6,825.0 1268.4,421.0 1632.0,421.0" stroke='#70c19f' stroke-width='2' fill='none' opacity='0.42' marker-end='url(#arrow)' />
+<text x='1228.0' y='617.0' class='edge-label'>inject and step for score assertion</text><path d="M824.0,825.0 C1187.6,825.0 1268.4,605.0 1632.0,605.0" stroke='#70c19f' stroke-width='2' fill='none' opacity='0.42' marker-end='url(#arrow)' />
+<text x='1228.0' y='709.0' class='edge-label'>inject and step for damage assertion</text><path d="M824.0,825.0 C1187.6,825.0 1268.4,789.0 1632.0,789.0" stroke='#70c19f' stroke-width='2' fill='none' opacity='0.42' marker-end='url(#arrow)' />
+<text x='1228.0' y='801.0' class='edge-label'>simulate burner input</text><path d="M824.0,825.0 C1187.6,825.0 1268.4,973.0 1632.0,973.0" stroke='#70c19f' stroke-width='2' fill='none' opacity='0.42' marker-end='url(#arrow)' />
+<text x='1228.0' y='893.0' class='edge-label'>force game-over and reset</text><path d="M1348.0,264.0 C1593.7,264.0 1648.3,264.0 1894.0,264.0" stroke='#d17d7d' stroke-width='2' fill='none' opacity='0.42' marker-end='url(#arrow)' />
+<text x='1621.0' y='258.0' class='edge-label'>map should reduce open-ended generation</text><path d="M1348.0,439.0 C1475.8,439.0 1504.2,421.0 1632.0,421.0" stroke='#d17d7d' stroke-width='2' fill='none' opacity='0.42' marker-end='url(#arrow)' />
+<text x='1490.0' y='424.0' class='edge-label'>score path check</text><path d="M1348.0,439.0 C1475.8,439.0 1504.2,605.0 1632.0,605.0" stroke='#d17d7d' stroke-width='2' fill='none' opacity='0.42' marker-end='url(#arrow)' />
+<text x='1490.0' y='516.0' class='edge-label'>damage path check</text><path d="M1348.0,614.0 C1475.8,614.0 1504.2,973.0 1632.0,973.0" stroke='#d17d7d' stroke-width='2' fill='none' opacity='0.42' marker-end='url(#arrow)' />
+<text x='1490.0' y='787.5' class='edge-label'>restart invariants</text><path d="M2134.0,430.0 C2182.0,430.0 1322.0,273.0 1370.0,273.0" stroke='#c8c2a8' stroke-width='2' fill='none' opacity='0.42' marker-end='url(#arrow)' />
+<text x='1752.0' y='345.5' class='edge-label'>browser page</text><path d="M824.0,641.0 C1069.7,641.0 1124.3,457.0 1370.0,457.0" stroke='#70c19f' stroke-width='2' fill='none' opacity='0.42' marker-end='url(#arrow)' />
+<text x='1097.0' y='543.0' class='edge-label'>visible state</text><path d="M2134.0,264.0 C2182.0,264.0 1584.0,255.0 1632.0,255.0" stroke='#c8c2a8' stroke-width='2' fill='none' opacity='0.42' marker-end='url(#arrow)' />
+<text x='1883.0' y='253.5' class='edge-label'>static language correctness</text>
+        <rect x='60' y='190' width='240' height='166' rx='20' class='card card-goal' />
+<rect x='76' y='206' width='54' height='22' rx='999' fill='#e7a75b' opacity='0.18' />
+<text x='84' y='221' class='kind'>goal</text>
+<text x='76' y='250' class='label'>Build a browser-playable hot air balloon game</text>
+<text x='78' y='274' class='detail'>* use a .cr8 build script as the source artifact</text>
+<text x='78' y='292' class='detail'>* generate a self-contained HTML page</text>
+<text x='78' y='310' class='detail'>* make the game testable in the browser</text>
+<text x='76' y='338' class='tag'>#product</text>
+<text x='169' y='338' class='tag'>#llm-map</text><rect x='1894' y='190' width='240' height='148' rx='20' class='card card-artifact' />
+<rect x='1910' y='206' width='54' height='22' rx='999' fill='#c8c2a8' opacity='0.18' />
+<text x='1918' y='221' class='kind'>artifact</text>
+<text x='1910' y='250' class='label'>examples/make_balloon_game.cr8</text>
+<text x='1912' y='274' class='detail'>* generator emits HTML, CSS, and JavaScript</text>
+<text x='1912' y='292' class='detail'>* canonical source file for the game</text>
+<text x='1910' y='320' class='tag'>#artifact</text>
+<text x='2008' y='320' class='tag'>#source</text><rect x='1894' y='356' width='240' height='148' rx='20' class='card card-artifact' />
+<rect x='1910' y='372' width='54' height='22' rx='999' fill='#c8c2a8' opacity='0.18' />
+<text x='1918' y='387' class='kind'>artifact</text>
+<text x='1910' y='416' class='label'>balloon_game.html</text>
+<text x='1912' y='440' class='detail'>* generated browser artifact</text>
+<text x='1912' y='458' class='detail'>* self-contained and openable without bundling</text>
+<text x='1910' y='486' class='tag'>#artifact</text>
+<text x='2008' y='486' class='tag'>#output</text><rect x='322' y='190' width='240' height='166' rx='20' class='card card-input' />
+<rect x='338' y='206' width='54' height='22' rx='999' fill='#7ab6d8' opacity='0.18' />
+<text x='346' y='221' class='kind'>input</text>
+<text x='338' y='250' class='label'>Player controls</text>
+<text x='340' y='274' class='detail'>* left and right steer with arrows or A/D</text>
+<text x='340' y='292' class='detail'>* burner climbs with Space, Up, or W</text>
+<text x='340' y='310' class='detail'>* tap or pointer input is supported</text>
+<text x='338' y='338' class='tag'>#input</text>
+<text x='421' y='338' class='tag'>#controls</text><rect x='322' y='374' width='240' height='166' rx='20' class='card card-input' />
+<rect x='338' y='390' width='54' height='22' rx='999' fill='#7ab6d8' opacity='0.18' />
+<text x='346' y='405' class='kind'>input</text>
+<text x='338' y='434' class='label'>Core state</text>
+<text x='340' y='458' class='detail'>* lives start at 3</text>
+<text x='340' y='476' class='detail'>* fuel starts full</text>
+<text x='340' y='494' class='detail'>* score and best score are tracked</text>
+<text x='338' y='522' class='tag'>#input</text>
+<text x='421' y='522' class='tag'>#state</text><rect x='322' y='558' width='240' height='166' rx='20' class='card card-input' />
+<rect x='338' y='574' width='54' height='22' rx='999' fill='#7ab6d8' opacity='0.18' />
+<text x='346' y='589' class='kind'>input</text>
+<text x='338' y='618' class='label'>Browser canvas scene</text>
+<text x='340' y='642' class='detail'>* fixed logical canvas size</text>
+<text x='340' y='660' class='detail'>* responsive page shell around the canvas</text>
+<text x='340' y='678' class='detail'>* no external runtime dependencies</text>
+<text x='338' y='706' class='tag'>#input</text>
+<text x='421' y='706' class='tag'>#ui</text><rect x='584' y='190' width='240' height='166' rx='20' class='card card-transform' />
+<rect x='600' y='206' width='54' height='22' rx='999' fill='#70c19f' opacity='0.18' />
+<text x='608' y='221' class='kind'>transform</text>
+<text x='600' y='250' class='label'>Update balloon physics</text>
+<text x='602' y='274' class='detail'>* apply gravity each frame</text>
+<text x='602' y='292' class='detail'>* apply burner thrust only when fuel is available</text>
+<text x='602' y='310' class='detail'>* clamp motion within the play area</text>
+<text x='600' y='338' class='tag'>#runtime</text>
+<text x='693' y='338' class='tag'>#gameplay</text><rect x='584' y='374' width='240' height='166' rx='20' class='card card-transform' />
+<rect x='600' y='390' width='54' height='22' rx='999' fill='#70c19f' opacity='0.18' />
+<text x='608' y='405' class='kind'>transform</text>
+<text x='600' y='434' class='label'>Spawn world entities</text>
+<text x='602' y='458' class='detail'>* spawn rings, stars, fuel canisters, storms, and birds</text>
+<text x='602' y='476' class='detail'>* increase pace as the run continues</text>
+<text x='602' y='494' class='detail'>* move entities across the playfield</text>
+<text x='600' y='522' class='tag'>#runtime</text>
+<text x='693' y='522' class='tag'>#content</text><rect x='846' y='190' width='240' height='184' rx='20' class='card card-decision' />
+<rect x='862' y='206' width='54' height='22' rx='999' fill='#9aa4ff' opacity='0.18' />
+<text x='870' y='221' class='kind'>decision</text>
+<text x='862' y='250' class='label'>Resolve collisions by entity type</text>
+<text x='864' y='274' class='detail'>* ring adds score</text>
+<text x='864' y='292' class='detail'>* star adds score</text>
+<text x='864' y='310' class='detail'>* fuel restores burner capacity</text>
+<text x='864' y='328' class='detail'>* storm and bird remove a life</text>
+<text x='862' y='356' class='tag'>#runtime</text>
+<text x='955' y='356' class='tag'>#rules</text><rect x='846' y='392' width='240' height='166' rx='20' class='card card-decision' />
+<rect x='862' y='408' width='54' height='22' rx='999' fill='#9aa4ff' opacity='0.18' />
+<text x='870' y='423' class='kind'>decision</text>
+<text x='862' y='452' class='label'>Enter game-over state when lives reach zero</text>
+<text x='864' y='476' class='detail'>* freeze active progression</text>
+<text x='864' y='494' class='detail'>* persist best score</text>
+<text x='864' y='512' class='detail'>* allow restart by key or tap</text>
+<text x='862' y='540' class='tag'>#runtime</text>
+<text x='955' y='540' class='tag'>#rules</text><rect x='584' y='558' width='240' height='166' rx='20' class='card card-transform' />
+<rect x='600' y='574' width='54' height='22' rx='999' fill='#70c19f' opacity='0.18' />
+<text x='608' y='589' class='kind'>transform</text>
+<text x='600' y='618' class='label'>Render the game frame</text>
+<text x='602' y='642' class='detail'>* draw sky, terrain, and atmospheric details</text>
+<text x='602' y='660' class='detail'>* draw balloon, entities, and particles</text>
+<text x='602' y='678' class='detail'>* draw HUD and game-over overlay</text>
+<text x='600' y='706' class='tag'>#render</text>
+<text x='688' y='706' class='tag'>#ui</text><rect x='584' y='742' width='240' height='166' rx='20' class='card card-transform' />
+<rect x='600' y='758' width='54' height='22' rx='999' fill='#70c19f' opacity='0.18' />
+<text x='608' y='773' class='kind'>transform</text>
+<text x='600' y='802' class='label'>Expose deterministic debug hooks</text>
+<text x='602' y='826' class='detail'>* spawn forced entities</text>
+<text x='602' y='844' class='detail'>* step the simulation manually</text>
+<text x='602' y='862' class='detail'>* read state for browser assertions</text>
+<text x='600' y='890' class='tag'>#testing</text>
+<text x='693' y='890' class='tag'>#debug</text><rect x='1108' y='190' width='240' height='148' rx='20' class='card card-risk' />
+<rect x='1124' y='206' width='54' height='22' rx='999' fill='#d17d7d' opacity='0.18' />
+<text x='1132' y='221' class='kind'>risk</text>
+<text x='1124' y='250' class='label'>Blank-page code generation is expensive for LLMs</text>
+<text x='1126' y='274' class='detail'>* too much free-form HTML and JS generation</text>
+<text x='1126' y='292' class='detail'>* hard to inspect without an intermediate plan</text>
+<text x='1124' y='320' class='tag'>#llm</text>
+<text x='1197' y='320' class='tag'>#planning</text><rect x='1108' y='356' width='240' height='166' rx='20' class='card card-risk' />
+<rect x='1124' y='372' width='54' height='22' rx='999' fill='#d17d7d' opacity='0.18' />
+<text x='1132' y='387' class='kind'>risk</text>
+<text x='1124' y='416' class='label'>Collision handling may score or damage incorrectly</text>
+<text x='1126' y='440' class='detail'>* wrong score increments</text>
+<text x='1126' y='458' class='detail'>* hazards not decrementing lives</text>
+<text x='1126' y='476' class='detail'>* collectibles not being removed</text>
+<text x='1124' y='504' class='tag'>#gameplay</text>
+<text x='1222' y='504' class='tag'>#correctness</text><rect x='1108' y='540' width='240' height='148' rx='20' class='card card-risk' />
+<rect x='1124' y='556' width='54' height='22' rx='999' fill='#d17d7d' opacity='0.18' />
+<text x='1132' y='571' class='kind'>risk</text>
+<text x='1124' y='600' class='label'>Reset may fail to restore the start state</text>
+<text x='1126' y='624' class='detail'>* lives, fuel, and entity lists must reset</text>
+<text x='1126' y='642' class='detail'>* game-over flag must clear</text>
+<text x='1124' y='670' class='tag'>#state</text>
+<text x='1207' y='670' class='tag'>#correctness</text><rect x='1370' y='190' width='240' height='166' rx='20' class='card card-output' />
+<rect x='1386' y='206' width='54' height='22' rx='999' fill='#c69fdf' opacity='0.18' />
+<text x='1394' y='221' class='kind'>output</text>
+<text x='1386' y='250' class='label'>Playable game page</text>
+<text x='1388' y='274' class='detail'>* user can steer and climb</text>
+<text x='1388' y='292' class='detail'>* user can collect and avoid entities</text>
+<text x='1388' y='310' class='detail'>* page renders cleanly in the browser</text>
+<text x='1386' y='338' class='tag'>#output</text>
+<text x='1474' y='338' class='tag'>#ux</text><rect x='1370' y='374' width='240' height='166' rx='20' class='card card-output' />
+<rect x='1386' y='390' width='54' height='22' rx='999' fill='#c69fdf' opacity='0.18' />
+<text x='1394' y='405' class='kind'>output</text>
+<text x='1386' y='434' class='label'>Visible score, lives, and fuel HUD</text>
+<text x='1388' y='458' class='detail'>* score should update over play</text>
+<text x='1388' y='476' class='detail'>* fuel should visibly drop while burning</text>
+<text x='1388' y='494' class='detail'>* lives should reflect damage</text>
+<text x='1386' y='522' class='tag'>#output</text>
+<text x='1474' y='522' class='tag'>#ux</text><rect x='1632' y='190' width='240' height='130' rx='20' class='card card-check' />
+<rect x='1648' y='206' width='54' height='22' rx='999' fill='#e6c86e' opacity='0.18' />
+<text x='1656' y='221' class='kind'>check</text>
+<text x='1648' y='250' class='label'>cr8 checker passes</text>
+<text x='1650' y='274' class='detail'>* run python3 cr8script.py --check examples/make_balloon_game.cr8</text>
+<text x='1648' y='302' class='tag'>#check</text>
+<text x='1731' y='302' class='tag'>#static</text><rect x='1632' y='338' width='240' height='166' rx='20' class='card card-check' />
+<rect x='1648' y='354' width='54' height='22' rx='999' fill='#e6c86e' opacity='0.18' />
+<text x='1656' y='369' class='kind'>check</text>
+<text x='1648' y='398' class='label'>Forced ring collision increases score</text>
+<text x='1650' y='422' class='detail'>* inject a ring near the player</text>
+<text x='1650' y='440' class='detail'>* step the simulation</text>
+<text x='1650' y='458' class='detail'>* assert score rose</text>
+<text x='1648' y='486' class='tag'>#check</text>
+<text x='1731' y='486' class='tag'>#browser</text><rect x='1632' y='522' width='240' height='166' rx='20' class='card card-check' />
+<rect x='1648' y='538' width='54' height='22' rx='999' fill='#e6c86e' opacity='0.18' />
+<text x='1656' y='553' class='kind'>check</text>
+<text x='1648' y='582' class='label'>Forced storm collision reduces lives</text>
+<text x='1650' y='606' class='detail'>* inject a storm near the player</text>
+<text x='1650' y='624' class='detail'>* step the simulation</text>
+<text x='1650' y='642' class='detail'>* assert lives dropped</text>
+<text x='1648' y='670' class='tag'>#check</text>
+<text x='1731' y='670' class='tag'>#browser</text><rect x='1632' y='706' width='240' height='166' rx='20' class='card card-check' />
+<rect x='1648' y='722' width='54' height='22' rx='999' fill='#e6c86e' opacity='0.18' />
+<text x='1656' y='737' class='kind'>check</text>
+<text x='1648' y='766' class='label'>Burner input climbs and consumes fuel</text>
+<text x='1650' y='790' class='detail'>* hold burner input through the debug API</text>
+<text x='1650' y='808' class='detail'>* assert player y moves upward</text>
+<text x='1650' y='826' class='detail'>* assert fuel decreases</text>
+<text x='1648' y='854' class='tag'>#check</text>
+<text x='1731' y='854' class='tag'>#browser</text><rect x='1632' y='890' width='240' height='166' rx='20' class='card card-check' />
+<rect x='1648' y='906' width='54' height='22' rx='999' fill='#e6c86e' opacity='0.18' />
+<text x='1656' y='921' class='kind'>check</text>
+<text x='1648' y='950' class='label'>Reset restores start state</text>
+<text x='1650' y='974' class='detail'>* reach game over</text>
+<text x='1650' y='992' class='detail'>* reset through the debug API</text>
+<text x='1650' y='1010' class='detail'>* assert lives, fuel, and flags are restored</text>
+<text x='1648' y='1038' class='tag'>#check</text>
+<text x='1731' y='1038' class='tag'>#browser</text>
+      </svg>
+    </section>
+    <details>
+      <summary>Source JSON</summary>
+      <pre>{
+  &quot;title&quot;: &quot;Skybound Ember&quot;,
+  &quot;task_kind&quot;: &quot;html_game&quot;,
+  &quot;summary&quot;: &quot;Generate a browser-playable hot air balloon game from a cr8script build script, with deterministic browser checks for scoring, damage, fuel use, and reset.&quot;,
+  &quot;nodes&quot;: [
+    {
+      &quot;id&quot;: &quot;goal&quot;,
+      &quot;kind&quot;: &quot;goal&quot;,
+      &quot;label&quot;: &quot;Build a browser-playable hot air balloon game&quot;,
+      &quot;details&quot;: [
+        &quot;use a .cr8 build script as the source artifact&quot;,
+        &quot;generate a self-contained HTML page&quot;,
+        &quot;make the game testable in the browser&quot;
+      ],
+      &quot;tags&quot;: [
+        &quot;product&quot;,
+        &quot;llm-map&quot;
+      ]
+    },
+    {
+      &quot;id&quot;: &quot;artifact_cr8&quot;,
+      &quot;kind&quot;: &quot;artifact&quot;,
+      &quot;label&quot;: &quot;examples/make_balloon_game.cr8&quot;,
+      &quot;details&quot;: [
+        &quot;generator emits HTML, CSS, and JavaScript&quot;,
+        &quot;canonical source file for the game&quot;
+      ],
+      &quot;tags&quot;: [
+        &quot;artifact&quot;,
+        &quot;source&quot;
+      ]
+    },
+    {
+      &quot;id&quot;: &quot;artifact_html&quot;,
+      &quot;kind&quot;: &quot;artifact&quot;,
+      &quot;label&quot;: &quot;balloon_game.html&quot;,
+      &quot;details&quot;: [
+        &quot;generated browser artifact&quot;,
+        &quot;self-contained and openable without bundling&quot;
+      ],
+      &quot;tags&quot;: [
+        &quot;artifact&quot;,
+        &quot;output&quot;
+      ]
+    },
+    {
+      &quot;id&quot;: &quot;input_controls&quot;,
+      &quot;kind&quot;: &quot;input&quot;,
+      &quot;label&quot;: &quot;Player controls&quot;,
+      &quot;details&quot;: [
+        &quot;left and right steer with arrows or A/D&quot;,
+        &quot;burner climbs with Space, Up, or W&quot;,
+        &quot;tap or pointer input is supported&quot;
+      ],
+      &quot;tags&quot;: [
+        &quot;input&quot;,
+        &quot;controls&quot;
+      ]
+    },
+    {
+      &quot;id&quot;: &quot;input_state&quot;,
+      &quot;kind&quot;: &quot;input&quot;,
+      &quot;label&quot;: &quot;Core state&quot;,
+      &quot;details&quot;: [
+        &quot;lives start at 3&quot;,
+        &quot;fuel starts full&quot;,
+        &quot;score and best score are tracked&quot;
+      ],
+      &quot;tags&quot;: [
+        &quot;input&quot;,
+        &quot;state&quot;
+      ]
+    },
+    {
+      &quot;id&quot;: &quot;input_canvas&quot;,
+      &quot;kind&quot;: &quot;input&quot;,
+      &quot;label&quot;: &quot;Browser canvas scene&quot;,
+      &quot;details&quot;: [
+        &quot;fixed logical canvas size&quot;,
+        &quot;responsive page shell around the canvas&quot;,
+        &quot;no external runtime dependencies&quot;
+      ],
+      &quot;tags&quot;: [
+        &quot;input&quot;,
+        &quot;ui&quot;
+      ]
+    },
+    {
+      &quot;id&quot;: &quot;transform_physics&quot;,
+      &quot;kind&quot;: &quot;transform&quot;,
+      &quot;label&quot;: &quot;Update balloon physics&quot;,
+      &quot;details&quot;: [
+        &quot;apply gravity each frame&quot;,
+        &quot;apply burner thrust only when fuel is available&quot;,
+        &quot;clamp motion within the play area&quot;
+      ],
+      &quot;tags&quot;: [
+        &quot;runtime&quot;,
+        &quot;gameplay&quot;
+      ]
+    },
+    {
+      &quot;id&quot;: &quot;transform_spawns&quot;,
+      &quot;kind&quot;: &quot;transform&quot;,
+      &quot;label&quot;: &quot;Spawn world entities&quot;,
+      &quot;details&quot;: [
+        &quot;spawn rings, stars, fuel canisters, storms, and birds&quot;,
+        &quot;increase pace as the run continues&quot;,
+        &quot;move entities across the playfield&quot;
+      ],
+      &quot;tags&quot;: [
+        &quot;runtime&quot;,
+        &quot;content&quot;
+      ]
+    },
+    {
+      &quot;id&quot;: &quot;decision_collisions&quot;,
+      &quot;kind&quot;: &quot;decision&quot;,
+      &quot;label&quot;: &quot;Resolve collisions by entity type&quot;,
+      &quot;details&quot;: [
+        &quot;ring adds score&quot;,
+        &quot;star adds score&quot;,
+        &quot;fuel restores burner capacity&quot;,
+        &quot;storm and bird remove a life&quot;
+      ],
+      &quot;tags&quot;: [
+        &quot;runtime&quot;,
+        &quot;rules&quot;
+      ]
+    },
+    {
+      &quot;id&quot;: &quot;decision_gameover&quot;,
+      &quot;kind&quot;: &quot;decision&quot;,
+      &quot;label&quot;: &quot;Enter game-over state when lives reach zero&quot;,
+      &quot;details&quot;: [
+        &quot;freeze active progression&quot;,
+        &quot;persist best score&quot;,
+        &quot;allow restart by key or tap&quot;
+      ],
+      &quot;tags&quot;: [
+        &quot;runtime&quot;,
+        &quot;rules&quot;
+      ]
+    },
+    {
+      &quot;id&quot;: &quot;transform_render&quot;,
+      &quot;kind&quot;: &quot;transform&quot;,
+      &quot;label&quot;: &quot;Render the game frame&quot;,
+      &quot;details&quot;: [
+        &quot;draw sky, terrain, and atmospheric details&quot;,
+        &quot;draw balloon, entities, and particles&quot;,
+        &quot;draw HUD and game-over overlay&quot;
+      ],
+      &quot;tags&quot;: [
+        &quot;render&quot;,
+        &quot;ui&quot;
+      ]
+    },
+    {
+      &quot;id&quot;: &quot;transform_debug_api&quot;,
+      &quot;kind&quot;: &quot;transform&quot;,
+      &quot;label&quot;: &quot;Expose deterministic debug hooks&quot;,
+      &quot;details&quot;: [
+        &quot;spawn forced entities&quot;,
+        &quot;step the simulation manually&quot;,
+        &quot;read state for browser assertions&quot;
+      ],
+      &quot;tags&quot;: [
+        &quot;testing&quot;,
+        &quot;debug&quot;
+      ]
+    },
+    {
+      &quot;id&quot;: &quot;risk_blank_page&quot;,
+      &quot;kind&quot;: &quot;risk&quot;,
+      &quot;label&quot;: &quot;Blank-page code generation is expensive for LLMs&quot;,
+      &quot;details&quot;: [
+        &quot;too much free-form HTML and JS generation&quot;,
+        &quot;hard to inspect without an intermediate plan&quot;
+      ],
+      &quot;tags&quot;: [
+        &quot;llm&quot;,
+        &quot;planning&quot;
+      ]
+    },
+    {
+      &quot;id&quot;: &quot;risk_collision_bug&quot;,
+      &quot;kind&quot;: &quot;risk&quot;,
+      &quot;label&quot;: &quot;Collision handling may score or damage incorrectly&quot;,
+      &quot;details&quot;: [
+        &quot;wrong score increments&quot;,
+        &quot;hazards not decrementing lives&quot;,
+        &quot;collectibles not being removed&quot;
+      ],
+      &quot;tags&quot;: [
+        &quot;gameplay&quot;,
+        &quot;correctness&quot;
+      ]
+    },
+    {
+      &quot;id&quot;: &quot;risk_reset_bug&quot;,
+      &quot;kind&quot;: &quot;risk&quot;,
+      &quot;label&quot;: &quot;Reset may fail to restore the start state&quot;,
+      &quot;details&quot;: [
+        &quot;lives, fuel, and entity lists must reset&quot;,
+        &quot;game-over flag must clear&quot;
+      ],
+      &quot;tags&quot;: [
+        &quot;state&quot;,
+        &quot;correctness&quot;
+      ]
+    },
+    {
+      &quot;id&quot;: &quot;output_playable&quot;,
+      &quot;kind&quot;: &quot;output&quot;,
+      &quot;label&quot;: &quot;Playable game page&quot;,
+      &quot;details&quot;: [
+        &quot;user can steer and climb&quot;,
+        &quot;user can collect and avoid entities&quot;,
+        &quot;page renders cleanly in the browser&quot;
+      ],
+      &quot;tags&quot;: [
+        &quot;output&quot;,
+        &quot;ux&quot;
+      ]
+    },
+    {
+      &quot;id&quot;: &quot;output_hud&quot;,
+      &quot;kind&quot;: &quot;output&quot;,
+      &quot;label&quot;: &quot;Visible score, lives, and fuel HUD&quot;,
+      &quot;details&quot;: [
+        &quot;score should update over play&quot;,
+        &quot;fuel should visibly drop while burning&quot;,
+        &quot;lives should reflect damage&quot;
+      ],
+      &quot;tags&quot;: [
+        &quot;output&quot;,
+        &quot;ux&quot;
+      ]
+    },
+    {
+      &quot;id&quot;: &quot;check_checker&quot;,
+      &quot;kind&quot;: &quot;check&quot;,
+      &quot;label&quot;: &quot;cr8 checker passes&quot;,
+      &quot;details&quot;: [
+        &quot;run python3 cr8script.py --check examples/make_balloon_game.cr8&quot;
+      ],
+      &quot;tags&quot;: [
+        &quot;check&quot;,
+        &quot;static&quot;
+      ]
+    },
+    {
+      &quot;id&quot;: &quot;check_ring&quot;,
+      &quot;kind&quot;: &quot;check&quot;,
+      &quot;label&quot;: &quot;Forced ring collision increases score&quot;,
+      &quot;details&quot;: [
+        &quot;inject a ring near the player&quot;,
+        &quot;step the simulation&quot;,
+        &quot;assert score rose&quot;
+      ],
+      &quot;tags&quot;: [
+        &quot;check&quot;,
+        &quot;browser&quot;
+      ]
+    },
+    {
+      &quot;id&quot;: &quot;check_storm&quot;,
+      &quot;kind&quot;: &quot;check&quot;,
+      &quot;label&quot;: &quot;Forced storm collision reduces lives&quot;,
+      &quot;details&quot;: [
+        &quot;inject a storm near the player&quot;,
+        &quot;step the simulation&quot;,
+        &quot;assert lives dropped&quot;
+      ],
+      &quot;tags&quot;: [
+        &quot;check&quot;,
+        &quot;browser&quot;
+      ]
+    },
+    {
+      &quot;id&quot;: &quot;check_burner&quot;,
+      &quot;kind&quot;: &quot;check&quot;,
+      &quot;label&quot;: &quot;Burner input climbs and consumes fuel&quot;,
+      &quot;details&quot;: [
+        &quot;hold burner input through the debug API&quot;,
+        &quot;assert player y moves upward&quot;,
+        &quot;assert fuel decreases&quot;
+      ],
+      &quot;tags&quot;: [
+        &quot;check&quot;,
+        &quot;browser&quot;
+      ]
+    },
+    {
+      &quot;id&quot;: &quot;check_reset&quot;,
+      &quot;kind&quot;: &quot;check&quot;,
+      &quot;label&quot;: &quot;Reset restores start state&quot;,
+      &quot;details&quot;: [
+        &quot;reach game over&quot;,
+        &quot;reset through the debug API&quot;,
+        &quot;assert lives, fuel, and flags are restored&quot;
+      ],
+      &quot;tags&quot;: [
+        &quot;check&quot;,
+        &quot;browser&quot;
+      ]
+    }
+  ],
+  &quot;edges&quot;: [
+    {
+      &quot;from&quot;: &quot;goal&quot;,
+      &quot;to&quot;: &quot;artifact_cr8&quot;,
+      &quot;kind&quot;: &quot;produces&quot;,
+      &quot;label&quot;: &quot;planned source artifact&quot;
+    },
+    {
+      &quot;from&quot;: &quot;artifact_cr8&quot;,
+      &quot;to&quot;: &quot;artifact_html&quot;,
+      &quot;kind&quot;: &quot;produces&quot;,
+      &quot;label&quot;: &quot;generator output&quot;
+    },
+    {
+      &quot;from&quot;: &quot;input_controls&quot;,
+      &quot;to&quot;: &quot;transform_physics&quot;,
+      &quot;kind&quot;: &quot;feeds&quot;,
+      &quot;label&quot;: &quot;movement and burner input&quot;
+    },
+    {
+      &quot;from&quot;: &quot;input_state&quot;,
+      &quot;to&quot;: &quot;transform_physics&quot;,
+      &quot;kind&quot;: &quot;feeds&quot;,
+      &quot;label&quot;: &quot;lives and fuel state&quot;
+    },
+    {
+      &quot;from&quot;: &quot;input_canvas&quot;,
+      &quot;to&quot;: &quot;transform_render&quot;,
+      &quot;kind&quot;: &quot;feeds&quot;,
+      &quot;label&quot;: &quot;scene dimensions and presentation&quot;
+    },
+    {
+      &quot;from&quot;: &quot;transform_physics&quot;,
+      &quot;to&quot;: &quot;decision_collisions&quot;,
+      &quot;kind&quot;: &quot;feeds&quot;,
+      &quot;label&quot;: &quot;player position&quot;
+    },
+    {
+      &quot;from&quot;: &quot;transform_spawns&quot;,
+      &quot;to&quot;: &quot;decision_collisions&quot;,
+      &quot;kind&quot;: &quot;feeds&quot;,
+      &quot;label&quot;: &quot;entity positions&quot;
+    },
+    {
+      &quot;from&quot;: &quot;decision_collisions&quot;,
+      &quot;to&quot;: &quot;decision_gameover&quot;,
+      &quot;kind&quot;: &quot;feeds&quot;,
+      &quot;label&quot;: &quot;life loss may end the run&quot;
+    },
+    {
+      &quot;from&quot;: &quot;transform_physics&quot;,
+      &quot;to&quot;: &quot;transform_render&quot;,
+      &quot;kind&quot;: &quot;feeds&quot;,
+      &quot;label&quot;: &quot;draw balloon state&quot;
+    },
+    {
+      &quot;from&quot;: &quot;transform_spawns&quot;,
+      &quot;to&quot;: &quot;transform_render&quot;,
+      &quot;kind&quot;: &quot;feeds&quot;,
+      &quot;label&quot;: &quot;draw entities&quot;
+    },
+    {
+      &quot;from&quot;: &quot;decision_collisions&quot;,
+      &quot;to&quot;: &quot;transform_render&quot;,
+      &quot;kind&quot;: &quot;feeds&quot;,
+      &quot;label&quot;: &quot;draw score and damage outcomes&quot;
+    },
+    {
+      &quot;from&quot;: &quot;decision_gameover&quot;,
+      &quot;to&quot;: &quot;transform_render&quot;,
+      &quot;kind&quot;: &quot;feeds&quot;,
+      &quot;label&quot;: &quot;draw game-over overlay&quot;
+    },
+    {
+      &quot;from&quot;: &quot;transform_debug_api&quot;,
+      &quot;to&quot;: &quot;check_ring&quot;,
+      &quot;kind&quot;: &quot;verifies&quot;,
+      &quot;label&quot;: &quot;inject and step for score assertion&quot;
+    },
+    {
+      &quot;from&quot;: &quot;transform_debug_api&quot;,
+      &quot;to&quot;: &quot;check_storm&quot;,
+      &quot;kind&quot;: &quot;verifies&quot;,
+      &quot;label&quot;: &quot;inject and step for damage assertion&quot;
+    },
+    {
+      &quot;from&quot;: &quot;transform_debug_api&quot;,
+      &quot;to&quot;: &quot;check_burner&quot;,
+      &quot;kind&quot;: &quot;verifies&quot;,
+      &quot;label&quot;: &quot;simulate burner input&quot;
+    },
+    {
+      &quot;from&quot;: &quot;transform_debug_api&quot;,
+      &quot;to&quot;: &quot;check_reset&quot;,
+      &quot;kind&quot;: &quot;verifies&quot;,
+      &quot;label&quot;: &quot;force game-over and reset&quot;
+    },
+    {
+      &quot;from&quot;: &quot;risk_blank_page&quot;,
+      &quot;to&quot;: &quot;artifact_cr8&quot;,
+      &quot;kind&quot;: &quot;guards&quot;,
+      &quot;label&quot;: &quot;map should reduce open-ended generation&quot;
+    },
+    {
+      &quot;from&quot;: &quot;risk_collision_bug&quot;,
+      &quot;to&quot;: &quot;check_ring&quot;,
+      &quot;kind&quot;: &quot;verifies&quot;,
+      &quot;label&quot;: &quot;score path check&quot;
+    },
+    {
+      &quot;from&quot;: &quot;risk_collision_bug&quot;,
+      &quot;to&quot;: &quot;check_storm&quot;,
+      &quot;kind&quot;: &quot;verifies&quot;,
+      &quot;label&quot;: &quot;damage path check&quot;
+    },
+    {
+      &quot;from&quot;: &quot;risk_reset_bug&quot;,
+      &quot;to&quot;: &quot;check_reset&quot;,
+      &quot;kind&quot;: &quot;verifies&quot;,
+      &quot;label&quot;: &quot;restart invariants&quot;
+    },
+    {
+      &quot;from&quot;: &quot;artifact_html&quot;,
+      &quot;to&quot;: &quot;output_playable&quot;,
+      &quot;kind&quot;: &quot;produces&quot;,
+      &quot;label&quot;: &quot;browser page&quot;
+    },
+    {
+      &quot;from&quot;: &quot;transform_render&quot;,
+      &quot;to&quot;: &quot;output_hud&quot;,
+      &quot;kind&quot;: &quot;produces&quot;,
+      &quot;label&quot;: &quot;visible state&quot;
+    },
+    {
+      &quot;from&quot;: &quot;artifact_cr8&quot;,
+      &quot;to&quot;: &quot;check_checker&quot;,
+      &quot;kind&quot;: &quot;verifies&quot;,
+      &quot;label&quot;: &quot;static language correctness&quot;
+    }
+  ]
+}</pre>
+    </details>
+  </main>
+</body>
+</html>

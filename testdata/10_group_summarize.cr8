@@ -7,7 +7,7 @@ let sales = [
   { product: "widget", region: "east", amount: 25.00 },
 ]
 
-# Flat summarize — single record over the full list.
+# Flat summarize -- single record over the full list.
 let totals = sales | summarize { total: sum(amount), n: length(items) }
 show f"all sales: {totals.total} across {totals.n} rows"
 

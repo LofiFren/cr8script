@@ -2,7 +2,7 @@
 # canonical "real data flow" demo: http -> json -> pipelines -> csv,
 # all in one file with no imports.
 #
-# Default URL is JSONPlaceholder — a stable fake REST API of 100 fake
+# Default URL is JSONPlaceholder -- a stable fake REST API of 100 fake
 # blog posts. Override with a CLI arg if you want to point at something
 # else that returns a JSON list of records.
 #
@@ -17,11 +17,11 @@ show f"GET {url}"
 let r = http.get(url)
 
 # `r.ok` is connection-level: true even on HTTP 4xx/5xx. We decide what
-# counts as success ourselves — the language doesn't guess.
+# counts as success ourselves -- the language doesn't guess.
 if r.ok is false then
   show f"network error: {r.error}"
 else if r.status is less than 200 or r.status is at least 300 then
-  show f"HTTP {r.status} — aborting"
+  show f"HTTP {r.status} -- aborting"
 else
   let posts = json.parse(r.body)
   show f"fetched {length(posts)} records in {r.time_ms} ms"
@@ -34,7 +34,7 @@ else
     | sort by n_posts descending
 
   # Write CSV header + rows. csv.write takes a list of records and
-  # returns the encoded text — handy for piping or composing.
-  show "# CSV output below — pipe to a file with > out.csv"
+  # returns the encoded text -- handy for piping or composing.
+  show "# CSV output below -- pipe to a file with > out.csv"
   show csv.write(by_user)
 end

@@ -1,4 +1,4 @@
-# LLMS.md — cr8script reference for language models
+# LLMS.md -- cr8script reference for language models
 
 A condensed reference for any LLM asked to read or write `.cr8` code.
 Humans should read `README.md` first; this file is a rules-and-grammar
@@ -8,10 +8,10 @@ sheet, no narrative.
 
 A small interpreted language with one file (`cr8script.py`). Tree-walking
 evaluator, decimal numbers, English-shaped syntax, no imports. Runs as
-`python3 cr8script.py file.cr8`. **The language is not Python** — Python
+`python3 cr8script.py file.cr8`. **The language is not Python** -- Python
 idioms produce errors, not silent success.
 
-## Hard rules — DO NOT do these
+## Hard rules -- DO NOT do these
 
 - **No `def`, no `:`, no significant whitespace.** Functions use `to name(...)
   ... end`. Blocks end with the keyword `end`.
@@ -136,21 +136,21 @@ otherwise as err
 end
 ```
 
-## Built-ins (top level — no imports)
+## Built-ins (top level -- no imports)
 
-- `show <expr>` — print. **Statement keyword, no parens.**
+- `show <expr>` -- print. **Statement keyword, no parens.**
 - `length(x)`, `count(list)`, `sum(list)`, `average(list)`, `min(list)`, `max(list)`
 - `to_text(x)`, `to_number(text)`
 - `range(end)`, `range(start, end)`
 - `keys(record)`, `type(value)`, `assert(cond, message?)`
-- `args` — list of CLI arguments
+- `args` -- list of CLI arguments
 
 ## Modules (accessed as `module.member`)
 
 - `math.sqrt`, `math.abs`, `math.floor`, `math.ceil`, `math.round`,
   `math.pow`, `math.pi`, `math.e`
 - `time.now()`, `time.monotonic()`, `time.sleep(seconds)`
-- `http.get(url)` — returns `{ ok, status, body, time_ms, error }`.
+- `http.get(url)` -- returns `{ ok, status, body, time_ms, error }`.
   `ok=true` means a response arrived (any status). `ok=false` is
   connection-level failure only. The script decides what counts as
   success (typically `r.ok and r.status is at least 200 and r.status is less than 400`).
@@ -182,18 +182,18 @@ let by_region = sales
 
 Verbs (these are the only ones):
 
-- `where <expr>` — filter
+- `where <expr>` -- filter
 - `sort by <expr>` (optional `ascending` / `descending`)
 - `take <n>`
 - `map <expr>`
-- `group by <expr>` — yields one record per group with two fields:
+- `group by <expr>` -- yields one record per group with two fields:
   `items` (the list of grouped rows) and the group key. The key field
-  is **named after the grouping expression when it's a bare name** —
+  is **named after the grouping expression when it's a bare name** --
   `group by region` produces `{ region, items }`, not `{ key, items }`.
   Complex expressions fall back to `key`: `group by name.upper`
   produces `{ key, items }`.
-- `summarize { ... }` — runs after `group by` (or directly on a list
-  of records). Bare names inside resolve against `items` — e.g.
+- `summarize { ... }` -- runs after `group by` (or directly on a list
+  of records). Bare names inside resolve against `items` -- e.g.
   `sum(amount)` sums the `amount` field of grouped items, and
   `length(items)` is the per-group count.
 
@@ -217,14 +217,14 @@ python3 cr8script.py --check-json file.cr8
 ```
 
 emits structured `{ line, message, hint }` diagnostics. Iterate against
-the checker — it catches typos in record field access and other static
+the checker -- it catches typos in record field access and other static
 issues without running the program. Then run `python3 cr8script.py file.cr8`.
 
 ## Canonical idioms
 
 - Return a value from `if`: use the expression form `let x = if cond then a else b end`.
-- "Does this list contain X?" → `xs.contains(x)`, never a manual loop.
-- "Sum a field across records" → `sum(records | map field)`.
-- Safe field access on a record literal of unknown shape → `r.get("key")`.
-- Safe HTTP success check → `r.ok and r.status is at least 200 and r.status is less than 400`.
-- Print formatted output → `show f"{name}: {count}"`, not concatenation.
+- "Does this list contain X?" -> `xs.contains(x)`, never a manual loop.
+- "Sum a field across records" -> `sum(records | map field)`.
+- Safe field access on a record literal of unknown shape -> `r.get("key")`.
+- Safe HTTP success check -> `r.ok and r.status is at least 200 and r.status is less than 400`.
+- Print formatted output -> `show f"{name}: {count}"`, not concatenation.

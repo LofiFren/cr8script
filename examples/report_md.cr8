@@ -1,5 +1,5 @@
 # Daily standup report from a list of tickets, emitted as markdown.
-# The "summarize this for me" task LLMs get every day — done in cr8
+# The "summarize this for me" task LLMs get every day -- done in cr8
 # without templating libraries.
 #
 #   python3 cr8script.py examples/report_md.cr8 > report.md
@@ -21,7 +21,7 @@ let tickets = [
 
 let groups = tickets | group by owner
 
-show f"# Daily standup — {date}"
+show f"# Daily standup -- {date}"
 show ""
 show f"_{length(tickets)} tickets across {length(groups)} owners._"
 show ""
@@ -37,7 +37,7 @@ let by_status = tickets
   | summarize { n: length(items) }
   | sort by n descending
 for each row in by_status
-  show f"- **{row.status}** — {row.n}"
+  show f"- **{row.status}** -- {row.n}"
 end
 show ""
 
@@ -52,7 +52,7 @@ for each g in groups
   show f"- {length(done)} done / {length(theirs)} total"
   show ""
   for each t in theirs
-    show f"  - `{t.id}` ({t.status}) — {t.title}"
+    show f"  - `{t.id}` ({t.status}) -- {t.title}"
   end
   show ""
 end
@@ -64,9 +64,9 @@ let urgent = tickets
 show "## High priority, not yet done"
 show ""
 if length(urgent) is 0 then
-  show "_None — nice._"
+  show "_None -- nice._"
 else
   for each t in urgent
-    show f"- `{t.id}` — **{t.title}** ({t.owner}, {t.status})"
+    show f"- `{t.id}` -- **{t.title}** ({t.owner}, {t.status})"
   end
 end

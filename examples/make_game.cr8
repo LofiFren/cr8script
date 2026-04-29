@@ -1,15 +1,15 @@
-# Cookie Catcher — generate a self-contained browser game.
+# Cookie Catcher -- generate a self-contained browser game.
 #
 # Run:
 #   python3 cr8script.py examples/make_game.cr8 > game.html
 # Then double-click game.html (or open it in any browser).
 #
 # How the game plays:
-#   • Move the basket with ← → arrow keys (or A / D)
-#   • Catch 🍪 cookies   = +10 points
-#   • Catch ⭐ golden    = +50 points
-#   • Avoid 💣 bombs     = -1 life
-#   • 3 lives. Press R to restart on game over.
+#   * Move the basket with <- -> arrow keys (or A / D)
+#   * Catch 🍪 cookies   = +10 points
+#   * Catch ⭐ golden    = +50 points
+#   * Avoid 💣 bombs     = -1 life
+#   * 3 lives. Press R to restart on game over.
 #
 # Why it's a cr8script: this file is the *build script*. It uses let, f-strings,
 # and `show` to emit one big self-contained HTML page. No build tools, no CDN.
@@ -54,7 +54,7 @@ show "</style>"
 show "</head>"
 show "<body>"
 show f"<h1>🍪 {title} 🍪</h1>"
-show "<div class='hint'>Move with <b>← →</b> (or <b>A / D</b>). Catch 🍪 (+10) and ⭐ (+50). Avoid 💣. Press <b>R</b> to restart.</div>"
+show "<div class='hint'>Move with <b><- -></b> (or <b>A / D</b>). Catch 🍪 (+10) and ⭐ (+50). Avoid 💣. Press <b>R</b> to restart.</div>"
 show f"<canvas id='game' width='{canvas_w}' height='{canvas_h}' tabindex='0'></canvas>"
 show "<footer>built from a cr8script</footer>"
 
@@ -189,7 +189,7 @@ show "    ctx.fillStyle = '#ffce54';"
 show "    ctx.fillText('Best: ' + best, 14, 38);"
 show "    ctx.fillStyle = 'white';"
 show "    ctx.font = '22px serif';"
-show "    ctx.fillText('❤️'.repeat(Math.max(0, lives)), W - 130, 12);"
+show "    ctx.fillText('❤'.repeat(Math.max(0, lives)), W - 130, 12);"
 show ""
 show "    if (gameOver) {"
 show "      ctx.fillStyle = 'rgba(0,0,0,0.7)';"
