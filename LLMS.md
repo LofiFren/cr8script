@@ -186,9 +186,16 @@ Verbs (these are the only ones):
 - `sort by <expr>` (optional `ascending` / `descending`)
 - `take <n>`
 - `map <expr>`
-- `group by <expr>` — yields `{ key, items }` per group
-- `summarize { ... }` — runs after `group by`; bare names inside resolve
-  against `items` (e.g. `sum(amount)` sums the `amount` field of grouped items)
+- `group by <expr>` — yields one record per group with two fields:
+  `items` (the list of grouped rows) and the group key. The key field
+  is **named after the grouping expression when it's a bare name** —
+  `group by region` produces `{ region, items }`, not `{ key, items }`.
+  Complex expressions fall back to `key`: `group by name.upper`
+  produces `{ key, items }`.
+- `summarize { ... }` — runs after `group by` (or directly on a list
+  of records). Bare names inside resolve against `items` — e.g.
+  `sum(amount)` sums the `amount` field of grouped items, and
+  `length(items)` is the per-group count.
 
 ## Soft vs hard keywords
 

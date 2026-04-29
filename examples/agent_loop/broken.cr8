@@ -19,10 +19,12 @@ let orders = [
 # Bug 1: typo on a directly-tracked record literal field.
 show f"first customer: {first.cusomer}"
 
-# Bug 2: typo inside a pipeline filter (bare `it` carries the row shape).
-let big_orders = orders | where it.amout is greater than 10
+# Bug 2: bare-name typo inside a pipeline filter. Inside `where`, bare
+# names auto-resolve to fields of each row — so `amout` is checked
+# against the row shape and flagged.
+let big_orders = orders | where amout is greater than 10
 show f"big orders: {length(big_orders)}"
 
-# Bug 3: typo inside a pipeline map.
-let labels = orders | map it.custmer
+# Bug 3: bare-name typo inside a pipeline map.
+let labels = orders | map custmer
 show f"labels: {labels}"

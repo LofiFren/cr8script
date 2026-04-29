@@ -2314,8 +2314,12 @@ def make_global_env() -> Env:
         "ceil":  BuiltinFunc("math.ceil",  _m_ceil,  (1, 1)),
         "round": BuiltinFunc("math.round", _m_round, (1, 1)),
         "pow":   BuiltinFunc("math.pow",   _m_pow,   (2, 2)),
-        "pi":    math.pi,
-        "e":     math.e,
+        # Constants are exposed as cr8 numbers (Decimal), not Python floats,
+        # so arithmetic with them obeys the same one-number-type rule as
+        # everything else. Decimal(str(...)) gives the printable IEEE-754
+        # representation rather than the binary expansion.
+        "pi":    Decimal(str(math.pi)),
+        "e":     Decimal(str(math.e)),
     })
     builtins_env.define("math", math_mod, mutable=False)
 
@@ -2396,16 +2400,35 @@ class _CheckIssue:
         return out
 
 
+_BUILTIN_NAMES = frozenset({
+    # Top-level functions registered in make_global_env.
+    "length", "to_text", "to_number", "sum", "count", "average",
+    "min", "max", "range", "keys", "type", "assert",
+    # Modules.
+    "math", "http", "json", "csv", "time",
+    # Special.
+    "args",
+})
+
+
 class Checker:
     """Walks the AST emitting issues without executing anything.
 
     Tracks let/var bindings to record literals and lists of record literals so
     `r.typo` and `things | where typo is ...` are flagged before runtime.
+    Also validates bare-name references against scope + builtins so an undefined
+    identifier (including a typo'd field inside a pipeline stage) is caught
+    before run time.
     """
 
     def __init__(self):
         self.issues: list[_CheckIssue] = []
         self.scope: list[dict] = [{}]
+        # Counter for "permissive" frames where bare-name validation is
+        # skipped — pipeline / summarize stages whose item shape isn't
+        # statically known. Bare names there might resolve at runtime to
+        # fields we couldn't determine, so we shouldn't flag them.
+        self.permissive_depth: int = 0
 
     # --- scope helpers ---
     def push(self):
@@ -2423,11 +2446,31 @@ class Checker:
                 return s[name]
         return None
 
+    def is_defined(self, name) -> bool:
+        for s in self.scope:
+            if name in s:
+                return True
+        return name in _BUILTIN_NAMES
+
+    def visible_names(self) -> list:
+        seen = set(_BUILTIN_NAMES)
+        for s in self.scope:
+            seen.update(s.keys())
+        return list(seen)
+
     def issue(self, message, line, hint=None, severity="error"):
         self.issues.append(_CheckIssue(message, line, hint, severity))
 
     # --- entry ---
     def check_program(self, stmts: list):
+        # Pre-pass: register top-level function names so mutual recursion
+        # and forward references (a function that calls one defined later
+        # in the file) don't false-positive against the bare-name check.
+        # Top-level `let` bindings are *not* pre-registered — `let x = x`
+        # should still flag x as undefined.
+        for s in stmts:
+            if type(s) is FuncDef:
+                self.define(s.name, None)
         for s in stmts:
             self.check_stmt(s)
 
@@ -2523,6 +2566,12 @@ class Checker:
                     self.check_expr(p)
             return
         if t is Name:
+            if self.permissive_depth > 0:
+                return
+            if not self.is_defined(node.ident):
+                suggest = _did_you_mean(node.ident, self.visible_names())
+                hint = f"did you mean `{suggest}`?" if suggest else None
+                self.issue(f"`{node.ident}` is not defined", node.line, hint=hint)
             return
         if t is List_:
             for x in node.items:
@@ -2577,26 +2626,61 @@ class Checker:
         self.check_expr(node.source)
         src_shape = self.shape_of(node.source)
         item_shape = src_shape.item if isinstance(src_shape, _ListShape) else None
+        # `pre_group_shape` is what `summarize` sees as the per-group
+        # items' element shape. Set whenever we last had a flat list of
+        # records — `group by` records the pre-group shape so a later
+        # `summarize` resolves bare names against the original fields.
+        pre_group_shape = item_shape
         for stage in node.stages:
-            if stage.field_scoped:
+            if stage.verb == "summarize" and isinstance(stage.arg, Record):
+                # summarize binds `items` plus every field common to the
+                # items list. We approximate by binding everything in
+                # `pre_group_shape` (the runtime intersects across all
+                # items, but for a static check the pre-group shape is
+                # already a tight upper bound).
                 self.push()
-                if isinstance(item_shape, _RecordShape):
+                permissive = not isinstance(pre_group_shape, _RecordShape)
+                if permissive:
+                    self.permissive_depth += 1
+                self.define("items", None)
+                if isinstance(pre_group_shape, _RecordShape):
+                    for f in pre_group_shape.fields:
+                        self.define(f, None)
+                for _, e in stage.arg.fields:
+                    self.check_expr(e)
+                if permissive:
+                    self.permissive_depth -= 1
+                self.pop()
+            elif stage.field_scoped:
+                self.push()
+                permissive = not isinstance(item_shape, _RecordShape)
+                if permissive:
+                    self.permissive_depth += 1
+                else:
                     for f in item_shape.fields:
                         self.define(f, None)
                 self.define("it", item_shape)
                 # Validate field accesses inside the stage expression
                 self._check_pipeline_stage_expr(stage.arg, item_shape)
+                if permissive:
+                    self.permissive_depth -= 1
                 self.pop()
             else:
                 self.check_expr(stage.arg)
             # Update the tracked item shape for the next stage.
             if stage.verb == "map" and isinstance(stage.arg, Name) and isinstance(item_shape, _RecordShape):
                 item_shape = None  # projected scalar — no record shape
+                pre_group_shape = None
             elif stage.verb == "group":
                 key_name = stage.group_key_name or "key"
                 item_shape = _RecordShape({key_name, "items"})
+                # pre_group_shape stays as the prior flat-records shape
             elif stage.verb == "summarize":
-                item_shape = None  # summarize ends the row-stream we know about
+                if isinstance(stage.arg, Record):
+                    item_shape = _RecordShape(k for k, _ in stage.arg.fields)
+                else:
+                    item_shape = None
+                pre_group_shape = item_shape
 
     def _check_pipeline_stage_expr(self, expr, item_shape):
         # When a bare Name in a field-scoped stage expression matches one of

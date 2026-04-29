@@ -16,8 +16,8 @@ let orders = [
 
 show f"first customer: {first.customer}"
 
-let big_orders = orders | where it.amount is greater than 10
+let big_orders = orders | where amount is greater than 10
 show f"big orders: {length(big_orders)}"
 
-let labels = orders | map it.customer
+let labels = orders | map customer
 show f"labels: {labels}"

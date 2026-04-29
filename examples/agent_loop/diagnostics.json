@@ -7,14 +7,14 @@
     },
     {
         "severity": "error",
-        "line": 23,
-        "message": "record has no field `amout`",
-        "hint": "did you mean `amount`? available: amount, customer, id"
+        "line": 25,
+        "message": "`amout` is not defined",
+        "hint": "did you mean `amount`?"
     },
     {
         "severity": "error",
-        "line": 27,
-        "message": "record has no field `custmer`",
-        "hint": "did you mean `customer`? available: amount, customer, id"
+        "line": 29,
+        "message": "`custmer` is not defined",
+        "hint": "did you mean `customer`?"
     }
 ]

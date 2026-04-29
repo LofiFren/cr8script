@@ -16,9 +16,17 @@ each issue, the program runs**. No human in the loop.
 
 ### 1. The model writes `broken.cr8`
 
-Three field-name typos (`cusomer`, `amout`, `custmer`) — exactly the kind
-of mistake a model makes when it's distracted, autocompleting from a
-weak prior, or pattern-matching against another language.
+Three field-name typos (`cusomer`, `amout`, `custmer`) — exactly the
+kind of mistake a model makes when it's distracted, autocompleting from
+a weak prior, or pattern-matching against another language. The bugs
+cover the two main shapes a typo can take in cr8:
+
+- A typo on a directly-tracked record (`first.cusomer`)
+- A typo on a bare name inside a pipeline stage where it would resolve
+  to a row field (`orders | where amout is greater than 10`,
+  `orders | map custmer`)
+
+The static checker catches both shapes.
 
 ### 2. Run the static checker first — never run untested code
 
@@ -87,7 +95,8 @@ literals and lists of record literals bound by `let`. It will **not**
 flag:
 
 - Field typos on function parameters (the param's shape is unknown)
-- Field typos on values returned from arbitrary expressions
+- Field typos on values returned from arbitrary expressions whose
+  shape can't be inferred (e.g. `json.parse(...)`, `r.get("...")`)
 - Runtime errors like `"5" + 3` (caught when the line executes)
 - Logic errors (the script does the wrong thing, not the wrong syntax)
 
