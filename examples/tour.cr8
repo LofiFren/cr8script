@@ -1,0 +1,92 @@
+# A tour of cr8script.
+
+# --- Variables ---
+let name = "Ada"
+var counter = 0
+counter = counter + 1
+show f"name is {name}"
+show f"counter is {counter}"
+
+# --- Conditionals ---
+if counter is greater than 0 then
+  show "positive"
+else if counter is 0 then
+  show "zero"
+else
+  show "negative"
+end
+
+# --- Loops ---
+for each n in 1..3
+  show f"n = {n}"
+end
+
+repeat 2 times
+  show "tick"
+end
+
+# --- Functions and records ---
+to greet(person)
+  return f"hello, {person.name}"
+end
+
+let ada = { name: "Ada", age: 36 }
+let lovelace = ada.with({ age: 37 })
+show greet(ada)
+show f"older: {lovelace.age}"
+
+# --- Lists, math, methods ---
+let nums = [3, 1, 4, 1, 5, 9, 2, 6]
+show f"sum: {sum(nums)}"
+show f"first: {nums.first}"
+show f"sqrt of 16: {math.sqrt(16)}"
+
+# --- Honest decimal math ---
+show f"0.1 + 0.2 = {0.1 + 0.2}"
+
+# --- Pipelines on a list of records ---
+let sales = [
+  { product: "widget", region: "east", amount: 12.50 },
+  { product: "gadget", region: "east", amount:  8.00 },
+  { product: "widget", region: "west", amount: 15.00 },
+  { product: "doodad", region: "east", amount: 99.00 },
+]
+
+let by_product = sales
+  | group by product
+  | summarize { total: sum(amount), n: length(items) }
+  | sort by total descending
+
+for each row in by_product
+  show f"{row.product}: {row.total} across {row.n} order(s)"
+end
+
+# --- json / csv built-ins ---
+let payload = json.stringify({ ok: true, ids: [1, 2, 3] })
+show payload
+
+let parsed = json.parse(payload)
+show f"first id is {parsed.ids.first}"
+
+let csv_in = "name,score\nAda,90\nBob,72"
+let rows = csv.parse(csv_in)
+for each r in rows
+  show f"{r.name} -> {r.score}"
+end
+
+# --- Maybe / nothing ---
+let lookup = { "one": 1, "two": 2 }
+let found = lookup.get("three")
+if found is nothing then
+  show "three is missing"
+else
+  show f"three = {found}"
+end
+
+# --- try / otherwise ---
+try
+  let bad = to_number("not a number")
+  show bad
+otherwise as err
+  show f"caught: {err.message}"
+end

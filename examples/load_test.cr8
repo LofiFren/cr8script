@@ -1,0 +1,94 @@
+# load_test.cr8 — a simple HTTP load tester.
+#
+# Usage:
+#   cr8script load_test.cr8 <url> [runs]
+#
+# Hits the URL `runs` times sequentially and reports timing stats.
+
+# --- read CLI args, with friendly defaults ---
+let url = if args.length is at least 1 then args[1] else "http://localhost:8000/" end
+let runs_text = if args.length is at least 2 then args[2] else "20" end
+let runs = to_number(runs_text)
+
+show "cr8script load test"
+show "  url:  " + url
+show "  runs: " + to_text(runs)
+show ""
+
+# --- run requests, gather samples ---
+var ok_count = 0
+var fail_count = 0
+var samples = []   # list of { ms, status, ok }
+
+let started_at = time.monotonic()
+for each i in 1..runs
+  let r = http.get(url)
+  let success = r.ok and r.status is at least 200 and r.status is less than 400
+
+  if success then
+    ok_count = ok_count + 1
+  else
+    fail_count = fail_count + 1
+  end
+
+  samples = samples + [{ ms: r.time_ms, status: r.status, ok: success }]
+end
+let elapsed_s = time.monotonic() - started_at
+
+# --- summarize ---
+# Only count timings for successful requests; failed connections have
+# meaningless durations.
+let times = samples | where ok | map ms
+
+show "results"
+show "  successes: " + to_text(ok_count) + "/" + to_text(runs)
+show "  failures:  " + to_text(fail_count)
+show "  wall:      " + to_text(math.round(elapsed_s * 100) / 100) + " s"
+
+if times.length is at least 1 then
+  let sorted = times | sort by it
+  let n = sorted.length
+  let p50_idx = math.ceil(n * 0.50)
+  let p95_idx = math.ceil(n * 0.95)
+  let p99_idx = math.ceil(n * 0.99)
+
+  show "  min ms:    " + to_text(math.round(min(times)))
+  show "  avg ms:    " + to_text(math.round(average(times)))
+  show "  p50 ms:    " + to_text(math.round(sorted[p50_idx]))
+  show "  p95 ms:    " + to_text(math.round(sorted[p95_idx]))
+  show "  p99 ms:    " + to_text(math.round(sorted[p99_idx]))
+  show "  max ms:    " + to_text(math.round(max(times)))
+
+  # requests per second based on wall time
+  if elapsed_s is greater than 0 then
+    let rps = math.round(runs / elapsed_s * 100) / 100
+    show "  rps:       " + to_text(rps)
+  end
+end
+
+# --- breakdown of status codes ---
+show ""
+show "status codes:"
+var seen = {}
+for each s in samples
+  let code = to_text(s.status)
+  let prev = seen.get(code)
+  if prev is nothing then
+    seen = seen.with(code, 1)
+  else
+    seen = seen.with(code, prev + 1)
+  end
+end
+for each code in seen.keys
+  show "  " + code + ": " + to_text(seen.get(code))
+end
+
+# --- if anything failed, list the first few errors ---
+let errors = samples | where not ok | take 5
+if errors.length is at least 1 then
+  show ""
+  show "first failures:"
+  for each e in errors
+    show "  status " + to_text(e.status) + ", " + to_text(math.round(e.ms)) + "ms"
+  end
+end

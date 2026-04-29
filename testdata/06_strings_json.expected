@@ -1,0 +1,17 @@
+Ada is 36
+sum = 14, count = 5
+set is {1, 2, 3}
+Bob
+[10, 20, 30]
+true
+note is nothing
+{"ok": true, "ids": [1, 2, 3], "message": null}
+{
+  "a": 1,
+  "b": [
+    2,
+    3
+  ]
+}
+round-trip x=1, z=hi
+caught: json.parse failed: Expecting property name enclosed in double quotes

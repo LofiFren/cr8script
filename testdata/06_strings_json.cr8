@@ -1,0 +1,41 @@
+# --- f-string interpolation ---
+let name = "Ada"
+let age = 36
+show f"{name} is {age}"
+
+# Expression inside the braces
+let nums = [3, 1, 4, 1, 5]
+show f"sum = {sum(nums)}, count = {count(nums)}"
+
+# Literal braces via doubling
+show f"set is {{1, 2, 3}}"
+
+# --- json.parse: text -> record / list / etc. ---
+let raw = "{\"name\": \"Bob\", \"scores\": [10, 20, 30], \"active\": true, \"note\": null}"
+let r = json.parse(raw)
+show r.name
+show r.scores
+show r.active
+if r.note is nothing then
+  show "note is nothing"
+end
+
+# --- json.stringify: value -> text (no indent) ---
+let payload = { ok: true, ids: [1, 2, 3], message: nothing }
+show json.stringify(payload)
+
+# --- json.stringify with indent ---
+show json.stringify({ a: 1, b: [2, 3] }, 2)
+
+# --- Round-trip ---
+let original = { x: 1, y: [true, false], z: "hi" }
+let trip = json.parse(json.stringify(original))
+show f"round-trip x={trip.x}, z={trip.z}"
+
+# --- Error path: bad json text raises a plain error ---
+try
+  let v = json.parse("{nope")
+  show "should not reach"
+otherwise as err
+  show f"caught: {err.message}"
+end

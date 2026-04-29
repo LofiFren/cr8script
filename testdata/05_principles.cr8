@@ -1,0 +1,54 @@
+# Demonstrate that cr8script refuses Python's footguns and explains why.
+
+# Principle 4: no silent type coercion.
+try
+  show "five" + 3
+otherwise as err
+  show "1: " + err.message
+end
+
+# Principle 4: only true/false for `if`, no truthy/falsy ints or strings.
+try
+  if 1 then
+    show "would be a bug"
+  end
+otherwise as err
+  show "2: " + err.message
+end
+
+# Principle 5: let-bound names cannot be reassigned.
+try
+  let pi = 3.14
+  pi = 3.15
+otherwise as err
+  show "3: " + err.message
+end
+
+# Principle 6: missing record field is a typo error, not a silent nothing.
+try
+  let r = { a: 1 }
+  show r.b
+otherwise as err
+  show "4: " + err.message
+end
+
+# Principle 6: but record.get returns nothing safely.
+let r2 = { a: 1 }
+let v = r2.get("b")
+if v is nothing then
+  show "5: get returned nothing"
+end
+
+# Principle 9: dividing by zero is an error with a clear message.
+try
+  show 10 / 0
+otherwise as err
+  show "6: " + err.message
+end
+
+# Principle 11: comparing different types is an error.
+try
+  show 5 is "5"
+otherwise as err
+  show "7: " + err.message
+end

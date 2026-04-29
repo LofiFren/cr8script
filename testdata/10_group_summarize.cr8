@@ -1,0 +1,40 @@
+let sales = [
+  { product: "widget", region: "east", amount: 12.50 },
+  { product: "gadget", region: "east", amount:  8.00 },
+  { product: "widget", region: "west", amount: 15.00 },
+  { product: "gadget", region: "west", amount:  3.25 },
+  { product: "doodad", region: "east", amount: 99.00 },
+  { product: "widget", region: "east", amount: 25.00 },
+]
+
+# Flat summarize — single record over the full list.
+let totals = sales | summarize { total: sum(amount), n: length(items) }
+show f"all sales: {totals.total} across {totals.n} rows"
+
+# Group by product, then summarize per group.
+let by_product = sales
+  | group by product
+  | summarize { total: sum(amount), n: length(items) }
+  | sort by total descending
+
+for each row in by_product
+  show f"{row.product}: total={row.total}, n={row.n}"
+end
+
+# Group by region, with min/max as well.
+let by_region = sales
+  | group by region
+  | summarize { lo: min(amount), hi: max(amount), avg: average(amount) }
+  | sort by region ascending
+
+for each row in by_region
+  show f"{row.region}: {row.lo} .. {row.hi} (avg {row.avg})"
+end
+
+# Group then operate on the raw items inside each group.
+let widget_count = sales
+  | group by product
+  | where product is "widget"
+  | map length(items)
+
+show f"widget orders: {widget_count.first}"

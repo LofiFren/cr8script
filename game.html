@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang='en'>
+<head>
+<meta charset='utf-8'>
+<title>Cookie Catcher</title>
+<meta name='viewport' content='width=device-width, initial-scale=1'>
+<style>
+  html, body { margin: 0; padding: 0; min-height: 100%; }
+  body {
+    background: #1a1a2e;
+    color: white;
+    font-family: system-ui, -apple-system, 'Segoe UI', sans-serif;
+    display: flex; flex-direction: column; align-items: center;
+    justify-content: center; min-height: 100vh;
+    user-select: none;
+  }
+  h1 { margin: 6px 0; letter-spacing: 1px; font-size: 28px; }
+  .hint { opacity: 0.7; font-size: 14px; margin-bottom: 10px; text-align: center; }
+  .hint b { color: #ffce54; }
+  canvas {
+    background: linear-gradient(180deg, #0f0c29, #302b63 70%, #24243e);
+    border: 3px solid #ffce54;
+    border-radius: 14px;
+    box-shadow: 0 14px 50px rgba(0,0,0,0.55);
+    image-rendering: optimizeQuality;
+    touch-action: none;
+  }
+  footer { opacity: 0.4; font-size: 12px; margin-top: 10px; }
+</style>
+</head>
+<body>
+<h1>🍪 Cookie Catcher 🍪</h1>
+<div class='hint'>Move with <b>← →</b> (or <b>A / D</b>). Catch 🍪 (+10) and ⭐ (+50). Avoid 💣. Press <b>R</b> to restart.</div>
+<canvas id='game' width='600' height='500' tabindex='0'></canvas>
+<footer>built from a cr8script</footer>
+<script>
+(() => {
+  const canvas = document.getElementById('game');
+  const ctx = canvas.getContext('2d');
+  const W = 600, H = 500;
+  const player = { x: W/2 - 40, y: H - 70, w: 80, h: 50, speed: 7 };
+  const STARTING_LIVES = 3;
+  let score = 0, best = +(localStorage.getItem('cookiecatcher_best') || 0);
+  let lives = STARTING_LIVES;
+  let items = [];
+  let spawnRate = 0.022;
+  let speed = 2;
+  let gameOver = false;
+  let flash = 0;
+
+  const keys = {};
+  function down(e) {
+    keys[e.key] = true;
+    if ((e.key === 'r' || e.key === 'R') && gameOver) reset();
+  }
+  function up(e) { keys[e.key] = false; }
+  window.addEventListener('keydown', down);
+  window.addEventListener('keyup', up);
+  canvas.addEventListener('pointermove', e => {
+    const r = canvas.getBoundingClientRect();
+    player.x = Math.max(0, Math.min(W - player.w, e.clientX - r.left - player.w/2));
+  });
+  canvas.focus();
+
+  function reset() {
+    score = 0; lives = STARTING_LIVES; items = [];
+    spawnRate = 0.022; speed = 2; gameOver = false;
+  }
+
+  function spawn() {
+    if (Math.random() >= spawnRate) return;
+    const r = Math.random();
+    let type;
+    if      (r < 0.15) type = 'bomb';
+    else if (r < 0.25) type = 'gold';
+    else               type = 'cookie';
+    items.push({
+      x: Math.random() * (W - 36),
+      y: -32,
+      type,
+      vy: speed + Math.random() * 2,
+      spin: (Math.random() - 0.5) * 0.05,
+      angle: 0,
+    });
+  }
+
+  function emoji(type) {
+    if (type === 'bomb')   return '💣';
+    if (type === 'gold')   return '⭐';
+    return '🍪';
+  }
+
+  function update() {
+    if (gameOver) return;
+    spawn();
+    if (keys['ArrowLeft']  || keys['a'] || keys['A']) player.x -= player.speed;
+    if (keys['ArrowRight'] || keys['d'] || keys['D']) player.x += player.speed;
+    player.x = Math.max(0, Math.min(W - player.w, player.x));
+    for (const it of items) { it.y += it.vy; it.angle += it.spin; }
+    for (const it of items) {
+      const hit = (it.y + 28 > player.y) && (it.y < player.y + player.h)
+               && (it.x + 28 > player.x) && (it.x < player.x + player.w);
+      if (!hit) continue;
+      if (it.type === 'bomb') {
+        lives -= 1;
+        flash = 12;
+        if (lives <= 0) {
+          gameOver = true;
+          if (score > best) { best = score; localStorage.setItem('cookiecatcher_best', best); }
+        }
+      } else {
+        score += (it.type === 'gold') ? 50 : 10;
+        spawnRate = Math.min(0.06, spawnRate + 0.0006);
+        speed = Math.min(9, speed + 0.05);
+      }
+      it.y = H + 200;
+    }
+    items = items.filter(it => it.y < H + 60);
+  }
+
+  function draw() {
+    ctx.clearRect(0, 0, W, H);
+
+    // Twinkly star field
+    const t = Date.now();
+    ctx.fillStyle = 'white';
+    for (let i = 0; i < 70; i++) {
+      const x = (i * 113) % W;
+      const y = ((i * 37 + t * 0.05) % H) | 0;
+      ctx.globalAlpha = 0.35 + 0.4 * Math.sin((t + i * 200) / 400);
+      ctx.fillRect(x, y, 2, 2);
+    }
+    ctx.globalAlpha = 1;
+
+    // Hurt flash
+    if (flash > 0) {
+      ctx.fillStyle = 'rgba(255, 60, 60, ' + (flash / 24) + ')';
+      ctx.fillRect(0, 0, W, H);
+      flash -= 1;
+    }
+
+    // Falling items (rotate around their centre)
+    ctx.font = '36px serif';
+    ctx.textBaseline = 'top';
+    for (const it of items) {
+      ctx.save();
+      ctx.translate(it.x + 18, it.y + 18);
+      ctx.rotate(it.angle);
+      ctx.fillText(emoji(it.type), -18, -22);
+      ctx.restore();
+    }
+
+    // Player basket
+    ctx.font = '54px serif';
+    ctx.fillText('🧺', player.x, player.y + 50);
+
+    // HUD
+    ctx.fillStyle = 'white';
+    ctx.font = 'bold 22px system-ui';
+    ctx.fillText('Score: ' + score, 14, 12);
+    ctx.font = '14px system-ui';
+    ctx.fillStyle = '#ffce54';
+    ctx.fillText('Best: ' + best, 14, 38);
+    ctx.fillStyle = 'white';
+    ctx.font = '22px serif';
+    ctx.fillText('❤️'.repeat(Math.max(0, lives)), W - 130, 12);
+
+    if (gameOver) {
+      ctx.fillStyle = 'rgba(0,0,0,0.7)';
+      ctx.fillRect(0, 0, W, H);
+      ctx.fillStyle = '#ffce54';
+      ctx.textAlign = 'center';
+      ctx.font = 'bold 56px system-ui';
+      ctx.fillText('Game Over', W/2, H/2 - 60);
+      ctx.fillStyle = 'white';
+      ctx.font = '28px system-ui';
+      ctx.fillText('Final score: ' + score, W/2, H/2);
+      ctx.font = '20px system-ui';
+      ctx.fillText('Best: ' + best, W/2, H/2 + 30);
+      ctx.fillText('Press R (or tap) to play again', W/2, H/2 + 60);
+      ctx.textAlign = 'start';
+    }
+  }
+
+  canvas.addEventListener('pointerdown', () => { if (gameOver) reset(); });
+
+  function loop() { update(); draw(); requestAnimationFrame(loop); }
+  loop();
+})();
+</script>
+</body>
+</html>

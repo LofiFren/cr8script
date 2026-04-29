@@ -1,0 +1,13 @@
+3 rows
+Ada / 36 / true
+Bob / 17 / false
+Cleo / 41 / true
+id=1 note=hello, world
+id=2 note=she said "hi"
+product,qty,price
+widget,3,12.5
+gadget,1,8
+
+a,b
+1,2
+3,4

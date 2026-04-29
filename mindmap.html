@@ -1,0 +1,460 @@
+<!DOCTYPE html>
+<html lang='en'>
+<head>
+<meta charset='utf-8'>
+<title>cr8script — atlas of a small language</title>
+<meta name='viewport' content='width=device-width, initial-scale=1'>
+<link rel='preconnect' href='https://fonts.googleapis.com'>
+<link rel='preconnect' href='https://fonts.gstatic.com' crossorigin>
+<link href='https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..900;1,9..144,300..900&family=JetBrains+Mono:wght@400;500&display=swap' rel='stylesheet'>
+<style>
+  :root {
+    --bg-top: #0c1024;
+    --bg-bot: #070912;
+    --ink: #f5ecd6;
+    --dim: #7d7a96;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; min-height: 100%; }
+  body {
+    background:
+      radial-gradient(ellipse at 20% 0%, rgba(140,110,80,0.18), transparent 55%),
+      radial-gradient(ellipse at 100% 100%, rgba(70,90,160,0.22), transparent 55%),
+      linear-gradient(180deg, var(--bg-top), var(--bg-bot));
+    color: var(--ink);
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 32px 20px 64px;
+  }
+  body::before {
+    content: '';
+    position: fixed; inset: 0;
+    background-image:
+      radial-gradient(rgba(255,255,255,0.04) 1px, transparent 1px);
+    background-size: 3px 3px;
+    pointer-events: none;
+    mix-blend-mode: screen;
+    opacity: 0.6;
+  }
+  header {
+    width: 100%;
+    max-width: 1100px;
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    align-items: end;
+    gap: 24px;
+    margin-bottom: 18px;
+    color: var(--ink);
+    border-bottom: 1px solid rgba(245,236,214,0.14);
+    padding-bottom: 14px;
+  }
+  .meta {
+    font-size: 11px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--dim);
+  }
+  .meta b { color: var(--ink); font-weight: 500; }
+  h1 {
+    font-family: 'Fraunces', serif;
+    font-style: italic;
+    font-weight: 300;
+    font-variation-settings: 'opsz' 144, 'SOFT' 100;
+    font-size: clamp(40px, 6vw, 72px);
+    margin: 0;
+    line-height: 1;
+    letter-spacing: -0.02em;
+  }
+  h1 .amp {
+    font-style: normal;
+    font-weight: 200;
+    color: var(--dim);
+    margin: 0 0.15em;
+  }
+  h1 .sub {
+    display: block;
+    font-style: italic;
+    font-weight: 300;
+    font-size: 0.32em;
+    color: var(--dim);
+    letter-spacing: 0.02em;
+    margin-top: 0.4em;
+  }
+  .legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 14px 22px;
+    justify-content: flex-end;
+    font-size: 11px;
+    color: var(--dim);
+  }
+  .legend-item { display: inline-flex; gap: 8px; align-items: center; }
+  .legend-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    box-shadow: 0 0 12px currentColor;
+  }
+  .legend-item span { letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink); }
+  .canvas-wrap {
+    position: relative;
+    width: 100%;
+    max-width: 1100px;
+  }
+  .canvas-wrap::before, .canvas-wrap::after {
+    content: '';
+    position: absolute;
+    width: 14px; height: 14px;
+    border: 1px solid rgba(245,236,214,0.35);
+  }
+  .canvas-wrap::before { top: -7px; left: -7px; border-right: 0; border-bottom: 0; }
+  .canvas-wrap::after  { bottom: -7px; right: -7px; border-left: 0; border-top: 0; }
+  canvas {
+    display: block;
+    width: 100%;
+    height: auto;
+    aspect-ratio: 1200 / 900;
+  }
+  footer {
+    margin-top: 18px;
+    color: var(--dim);
+    font-size: 11px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    width: 100%;
+    max-width: 1100px;
+    display: flex;
+    justify-content: space-between;
+    border-top: 1px solid rgba(245,236,214,0.14);
+    padding-top: 14px;
+  }
+</style>
+</head>
+<body>
+<header>
+  <div class='meta'>plate <b>I.I</b><br>edition v1.1</div>
+  <h1>cr8script<span class='amp'>·</span><em style='font-style:italic;font-weight:200;'>atlas</em><span class='sub'>atlas of a small language</span></h1>
+  <div class='legend'>
+    <div class='legend-item'>
+      <span class='legend-dot' style='color:#e9b478;background:#e9b478'></span>
+      <span>Syntax</span>
+    </div>
+    <div class='legend-item'>
+      <span class='legend-dot' style='color:#7ec5b8;background:#7ec5b8'></span>
+      <span>Pipelines</span>
+    </div>
+    <div class='legend-item'>
+      <span class='legend-dot' style='color:#d8a3b8;background:#d8a3b8'></span>
+      <span>Types</span>
+    </div>
+    <div class='legend-item'>
+      <span class='legend-dot' style='color:#a3c79e;background:#a3c79e'></span>
+      <span>Built-ins</span>
+    </div>
+    <div class='legend-item'>
+      <span class='legend-dot' style='color:#9aafd6;background:#9aafd6'></span>
+      <span>Tooling</span>
+    </div>
+    <div class='legend-item'>
+      <span class='legend-dot' style='color:#c3a6d8;background:#c3a6d8'></span>
+      <span>Principles</span>
+    </div>
+  </div>
+</header>
+<div class='canvas-wrap'>
+  <canvas id='map' width='1200' height='900'></canvas>
+</div>
+<footer>
+  <span>cr8script · 2026</span>
+  <span>generated by examples/make_mindmap.cr8</span>
+</footer>
+<script>
+  const DATA = [{"name": "Syntax", "color": "#e9b478", "topics": ["let / var", "to (functions)", "if then end", "for each in", "try otherwise", "f-strings"]}, {"name": "Pipelines", "color": "#7ec5b8", "topics": ["where", "sort by", "take", "map", "group by", "summarize"]}, {"name": "Types", "color": "#d8a3b8", "topics": ["number (decimal)", "text", "boolean", "list", "record", "nothing"]}, {"name": "Built-ins", "color": "#a3c79e", "topics": ["math", "json", "csv", "http", "time", "sum / count / avg"]}, {"name": "Tooling", "color": "#9aafd6", "topics": ["REPL", "--check", "--check-json", "--test", "tour.cr8"]}, {"name": "Principles", "color": "#c3a6d8", "topics": ["no truthy/falsy", "0.1 + 0.2 = 0.3", "no null surprises", "errors that teach", "values not objects", "determinism"]}];
+  const W = 1200, H = 900;
+  const canvas = document.getElementById('map');
+  const ctx = canvas.getContext('2d');
+
+  // Sharper rendering on hi-DPI displays
+  const dpr = Math.min(window.devicePixelRatio || 1, 2);
+  canvas.width = W * dpr;
+  canvas.height = H * dpr;
+  canvas.style.aspectRatio = (W / H).toString();
+  ctx.scale(dpr, dpr);
+
+  const center = { x: W / 2, y: H / 2 + 18, name: 'cr8script' };
+  const CAT_R = 200;
+  const TOPIC_R_INNER = 320;
+  const TOPIC_R_OUTER = 360;
+
+  // --- Pre-layout: position categories and topics ---
+  const N = DATA.length;
+  DATA.forEach((cat, i) => {
+    const a = (i / N) * Math.PI * 2 - Math.PI / 2;
+    cat.angle = a;
+    cat.x = center.x + Math.cos(a) * CAT_R;
+    cat.y = center.y + Math.sin(a) * CAT_R;
+    cat.topics.forEach((label, j, arr) => {
+      const m = arr.length;
+      // Spread topics across most of this category's slice (≈ 360/N)
+      const slice = (Math.PI * 2) / N;
+      const span = slice * 0.78;
+      const ta = a + (j - (m - 1) / 2) * (span / Math.max(1, m - 1));
+      // Stagger alternate topics into inner/outer rings
+      const r = (j % 2 === 0) ? TOPIC_R_INNER : TOPIC_R_OUTER;
+      arr[j] = {
+        label,
+        nx: center.x + Math.cos(ta) * r,
+        ny: center.y + Math.sin(ta) * r,
+        angle: ta,
+        color: cat.color,
+        ring: (j % 2 === 0) ? 'inner' : 'outer',
+      };
+    });
+  });
+
+  // --- Compute label rectangles (with measured text) ---
+  ctx.font = "500 11px 'JetBrains Mono', monospace";
+  const PAD_X = 7, PAD_Y = 5, NODE_R = 4.2;
+  const labels = [];
+  DATA.forEach(cat => cat.topics.forEach(tp => {
+    const w = ctx.measureText(tp.label).width + PAD_X * 2;
+    const h = 11 + PAD_Y * 2;
+    // Initial label position: 22px outward from the topic node
+    const off = 22;
+    const cx = tp.nx + Math.cos(tp.angle) * off;
+    const cy = tp.ny + Math.sin(tp.angle) * off;
+    const lab = { tp, w, h, cx, cy };
+    tp.lab = lab;
+    labels.push(lab);
+  }));
+
+  ctx.font = "500 13px 'JetBrains Mono', monospace";
+  const catLabels = DATA.map(cat => {
+    const w = ctx.measureText(cat.name).width + PAD_X * 2 + 4;
+    const h = 13 + PAD_Y * 2;
+    const off = 28;
+    const cx = cat.x + Math.cos(cat.angle) * off;
+    const cy = cat.y + Math.sin(cat.angle) * off;
+    const lab = { cat, w, h, cx, cy, isCategory: true };
+    cat.lab = lab;
+    return lab;
+  });
+
+  // Solid obstacles: nodes (center, categories, topics) — labels avoid these
+  const obstacles = [{ cx: center.x, cy: center.y, r: 36 }];
+  DATA.forEach(cat => {
+    obstacles.push({ cx: cat.x, cy: cat.y, r: 14 });
+    cat.topics.forEach(tp => obstacles.push({ cx: tp.nx, cy: tp.ny, r: NODE_R + 4 }));
+  });
+
+  // --- Force-based label separator ---
+  // Each label is pulled toward its 'home' (radial position outside its node)
+  // and pushed away from other labels and node-obstacles. Iterate to settle.
+  const allLabels = [...labels, ...catLabels];
+  allLabels.forEach(L => { L.hx = L.cx; L.hy = L.cy; });
+
+  function rectsOverlap(a, b, pad) {
+    pad = pad || 0;
+    return !(a.cx + a.w/2 + pad < b.cx - b.w/2
+          || b.cx + b.w/2 + pad < a.cx - a.w/2
+          || a.cy + a.h/2 + pad < b.cy - b.h/2
+          || b.cy + b.h/2 + pad < a.cy - a.h/2);
+  }
+  function rectCircleOverlap(L, o, pad) {
+    pad = pad || 0;
+    const dx = Math.max(L.cx - L.w/2 - pad, Math.min(o.cx, L.cx + L.w/2 + pad)) - o.cx;
+    const dy = Math.max(L.cy - L.h/2 - pad, Math.min(o.cy, L.cy + L.h/2 + pad)) - o.cy;
+    return (dx*dx + dy*dy) < (o.r * o.r);
+  }
+
+  for (let it = 0; it < 240; it++) {
+    let moved = false;
+    for (let i = 0; i < allLabels.length; i++) {
+      const A = allLabels[i];
+      // Soft pull toward the home position
+      A.cx += (A.hx - A.cx) * 0.02;
+      A.cy += (A.hy - A.cy) * 0.02;
+      for (let j = i + 1; j < allLabels.length; j++) {
+        const B = allLabels[j];
+        if (rectsOverlap(A, B, 4)) {
+          const dx = (A.cx - B.cx) || 0.01;
+          const dy = (A.cy - B.cy) || 0.01;
+          const d = Math.hypot(dx, dy) || 0.01;
+          const push = 1.6;
+          A.cx += (dx / d) * push;
+          A.cy += (dy / d) * push;
+          B.cx -= (dx / d) * push;
+          B.cy -= (dy / d) * push;
+          moved = true;
+        }
+      }
+      for (const o of obstacles) {
+        if (rectCircleOverlap(A, o, 4)) {
+          const dx = (A.cx - o.cx) || 0.01;
+          const dy = (A.cy - o.cy) || 0.01;
+          const d = Math.hypot(dx, dy) || 0.01;
+          A.cx += (dx / d) * 2.2;
+          A.cy += (dy / d) * 2.2;
+          moved = true;
+        }
+      }
+    }
+    if (!moved) break;
+  }
+
+  // --- Background skeleton: faint concentric rings + crosshair ---
+  function drawSkeleton() {
+    ctx.save();
+    ctx.strokeStyle = 'rgba(245,236,214,0.05)';
+    ctx.lineWidth = 1;
+    [80, 140, CAT_R, 260, TOPIC_R_INNER, TOPIC_R_OUTER, 410].forEach(r => {
+      ctx.beginPath(); ctx.arc(center.x, center.y, r, 0, Math.PI * 2); ctx.stroke();
+    });
+    // Subtle radial spokes — one per category angle
+    ctx.strokeStyle = 'rgba(245,236,214,0.04)';
+    DATA.forEach(cat => {
+      ctx.beginPath();
+      ctx.moveTo(center.x + Math.cos(cat.angle) * 60,
+                center.y + Math.sin(cat.angle) * 60);
+      ctx.lineTo(center.x + Math.cos(cat.angle) * 420,
+                center.y + Math.sin(cat.angle) * 420);
+      ctx.stroke();
+    });
+    // Compass marks
+    ctx.fillStyle = 'rgba(245,236,214,0.25)';
+    ctx.font = "400 9px 'JetBrains Mono', monospace";
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    const marks = [['N', 0, -430], ['E', 430, 0], ['S', 0, 430], ['W', -430, 0]];
+    marks.forEach(([t, dx, dy]) => ctx.fillText(t, center.x + dx, center.y + dy));
+    ctx.restore();
+  }
+
+  // --- Edge with a slow synapse-pulse traveling along it ---
+  function drawEdge(x1, y1, x2, y2, color, t, phase) {
+    ctx.save();
+    // Soft base line
+    ctx.strokeStyle = 'rgba(245,236,214,0.08)';
+    ctx.lineWidth = 0.8;
+    const mx = (x1 + x2) / 2, my = (y1 + y2) / 2;
+    const dx = x2 - x1, dy = y2 - y1;
+    const cx = mx - dy * 0.05, cy = my + dx * 0.05;
+    ctx.beginPath();
+    ctx.moveTo(x1, y1);
+    ctx.quadraticCurveTo(cx, cy, x2, y2);
+    ctx.stroke();
+    // Pulse: a small bright dot traveling along the curve
+    const p = ((t / 2400) + phase) % 1;
+    const ix = (1 - p) * (1 - p) * x1 + 2 * (1 - p) * p * cx + p * p * x2;
+    const iy = (1 - p) * (1 - p) * y1 + 2 * (1 - p) * p * cy + p * p * y2;
+    const grad = ctx.createRadialGradient(ix, iy, 0, ix, iy, 14);
+    grad.addColorStop(0, color + 'ee');
+    grad.addColorStop(0.4, color + '66');
+    grad.addColorStop(1, color + '00');
+    ctx.fillStyle = grad;
+    ctx.beginPath(); ctx.arc(ix, iy, 14, 0, Math.PI * 2); ctx.fill();
+    ctx.restore();
+  }
+
+  // --- Leader line from a node to its label rectangle ---
+  function drawLeader(nx, ny, lab, color) {
+    // Choose the closest point on the label's edge (axis-aligned)
+    const tx = Math.max(lab.cx - lab.w/2, Math.min(nx, lab.cx + lab.w/2));
+    const ty = Math.max(lab.cy - lab.h/2, Math.min(ny, lab.cy + lab.h/2));
+    ctx.save();
+    ctx.strokeStyle = 'rgba(245,236,214,0.22)';
+    ctx.lineWidth = 0.7;
+    ctx.setLineDash([2, 3]);
+    ctx.beginPath();
+    ctx.moveTo(nx, ny);
+    ctx.lineTo(tx, ty);
+    ctx.stroke();
+    ctx.restore();
+  }
+
+  // --- A node: small filled disc with subtle glow ---
+  function drawNode(x, y, color, r, t, phase) {
+    ctx.save();
+    const pulse = r + Math.sin(t / 700 + phase) * 0.6;
+    const g = ctx.createRadialGradient(x, y, 0, x, y, r * 5);
+    g.addColorStop(0, color + '88');
+    g.addColorStop(0.4, color + '33');
+    g.addColorStop(1, color + '00');
+    ctx.fillStyle = g;
+    ctx.beginPath(); ctx.arc(x, y, r * 5, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = color;
+    ctx.beginPath(); ctx.arc(x, y, pulse, 0, Math.PI * 2); ctx.fill();
+    ctx.strokeStyle = 'rgba(245,236,214,0.85)';
+    ctx.lineWidth = 1;
+    ctx.stroke();
+    ctx.restore();
+  }
+
+  function drawLabel(lab, font, color, isCategory) {
+    ctx.save();
+    // Subtle plate behind the text for crispness
+    ctx.fillStyle = 'rgba(8,10,24,0.78)';
+    ctx.fillRect(lab.cx - lab.w/2, lab.cy - lab.h/2, lab.w, lab.h);
+    ctx.strokeStyle = isCategory ? color : 'rgba(245,236,214,0.18)';
+    ctx.lineWidth = isCategory ? 1.1 : 0.6;
+    ctx.strokeRect(lab.cx - lab.w/2, lab.cy - lab.h/2, lab.w, lab.h);
+    ctx.fillStyle = isCategory ? color : 'rgba(245,236,214,0.92)';
+    ctx.font = font;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(isCategory ? lab.cat.name : lab.tp.label, lab.cx, lab.cy + 0.5);
+    ctx.restore();
+  }
+
+  function loop() {
+    const t = performance.now();
+    ctx.clearRect(0, 0, W, H);
+
+    drawSkeleton();
+
+    // Edges: center → categories, categories → topics
+    DATA.forEach((cat, i) => {
+      drawEdge(center.x, center.y, cat.x, cat.y, cat.color, t, i * 0.17);
+      cat.topics.forEach((tp, j) => drawEdge(cat.x, cat.y, tp.nx, tp.ny, cat.color, t, i * 0.17 + j * 0.09));
+    });
+
+    // Leader lines from nodes to their labels
+    DATA.forEach(cat => {
+      drawLeader(cat.x, cat.y, cat.lab, cat.color);
+      cat.topics.forEach(tp => drawLeader(tp.nx, tp.ny, tp.lab, cat.color));
+    });
+
+    // Topic nodes
+    DATA.forEach((cat, i) => cat.topics.forEach((tp, j) =>
+      drawNode(tp.nx, tp.ny, tp.color, NODE_R, t, i * 0.5 + j * 0.3)));
+
+    // Category nodes
+    DATA.forEach((cat, i) =>
+      drawNode(cat.x, cat.y, cat.color, 8, t, i * 0.5));
+
+    // Center node — pure ink/cream
+    const cr = 22 + Math.sin(t / 800) * 1.2;
+    const g = ctx.createRadialGradient(center.x, center.y, 4, center.x, center.y, cr * 4.5);
+    g.addColorStop(0, 'rgba(245,236,214,0.85)');
+    g.addColorStop(0.4, 'rgba(245,236,214,0.18)');
+    g.addColorStop(1, 'rgba(245,236,214,0)');
+    ctx.fillStyle = g;
+    ctx.beginPath(); ctx.arc(center.x, center.y, cr * 4.5, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = '#f5ecd6';
+    ctx.beginPath(); ctx.arc(center.x, center.y, cr, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = '#0a0e1f';
+    ctx.font = "500 13px 'JetBrains Mono', monospace";
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText('cr8script', center.x, center.y);
+
+    // Topic labels first, then category labels (so categories sit on top)
+    labels.forEach(lab => drawLabel(lab, "500 11px 'JetBrains Mono', monospace", lab.tp.color, false));
+    catLabels.forEach(lab => drawLabel(lab, "500 13px 'JetBrains Mono', monospace", lab.cat.color, true));
+
+    requestAnimationFrame(loop);
+  }
+  loop();
+</script>
+</body>
+</html>

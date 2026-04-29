@@ -1,0 +1,26 @@
+var sum = 0
+for each n in 1..5
+  sum = sum + n
+end
+show sum
+
+if sum is 15 then
+  show "fifteen"
+else
+  show "other"
+end
+
+repeat 3 times
+  show "x"
+end
+
+let grade = 85
+if grade is at least 90 then
+  show "A"
+else if grade is at least 80 then
+  show "B"
+else if grade is at least 70 then
+  show "C"
+else
+  show "below"
+end

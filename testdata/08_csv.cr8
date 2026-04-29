@@ -1,0 +1,26 @@
+# csv.parse: text -> list of records, first row is the header.
+let raw = "name,age,active\nAda,36,true\nBob,17,false\nCleo,41,true"
+let people = csv.parse(raw)
+
+show f"{count(people)} rows"
+for each p in people
+  show f"{p.name} / {p.age} / {p.active}"
+end
+
+# Quoted fields with commas and embedded quotes.
+let messy = "id,note\n1,\"hello, world\"\n2,\"she said \"\"hi\"\"\""
+let parsed = csv.parse(messy)
+for each row in parsed
+  show f"id={row.id} note={row.note}"
+end
+
+# csv.write: list of records -> CSV text. Header is the union of keys.
+let rows = [
+  { product: "widget", qty: 3, price: 12.5 },
+  { product: "gadget", qty: 1, price: 8 },
+]
+show csv.write(rows)
+
+# Round-trip through parse + write.
+let trip = csv.write(csv.parse("a,b\n1,2\n3,4"))
+show trip
