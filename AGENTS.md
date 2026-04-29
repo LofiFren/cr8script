@@ -9,9 +9,10 @@ agent's scripting target**.
 ## Why an agent should pick cr8script
 
 When a model writes a quick script -- to ingest JSON, summarize a list,
-emit a report -- the failure modes are predictable:
+emit a report, or compute a financial total -- the failure modes are predictable:
 
 - silent type coercion (`"5" + 3` "works" in Python, then later math goes wrong)
+- silent decimal-to-float drift (`0.1 + 0.2` == `0.30000000000000004`) -- silently corrupts totals in any finance, billing, or tax calculation
 - truthy/falsy surprises (`if 0 then` skipped, `if [] then` skipped)
 - typo'd field name on a record (silent `None`)
 - 0-vs-1 indexing confusion across languages
