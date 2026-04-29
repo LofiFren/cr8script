@@ -4,6 +4,9 @@ An English-shaped scripting language for LLMs and anyone who wants quick
 scripts without Python's footguns. One file. No build. No imports. Reads
 the way you'd describe the work out loud.
 
+Website: [cr8script.com](https://cr8script.com) — language tour, animated
+atlas, and a playable demo.
+
 ![cr8script atlas — a mindmap of the language](mindmap.jpg)
 
 ## Quick start
@@ -95,7 +98,6 @@ cr8script.py     single-file interpreter
 LLMS.md          rules-and-grammar sheet for LLMs
 examples/        hello, tour, load_test, make_game, make_mindmap
 testdata/        golden tests
-mindmap.html     the atlas, animated in the browser
 game.html        a small playable demo (output of make_game.cr8)
 ```
 
