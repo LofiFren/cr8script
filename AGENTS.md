@@ -141,6 +141,7 @@ include one of these -- pick by task shape:
 |------|------------|
 | Anything new | [`examples/tour.cr8`](examples/tour.cr8) -- the whole language in 92 lines |
 | Self-correction loop demo | [`examples/agent_loop/`](examples/agent_loop/) -- broken -> diagnostics -> fixed |
+| Plan before code (typed task graph) | [`LLM_MAP.md`](LLM_MAP.md) + [`examples/llm_map/`](examples/llm_map/) -- a typed planning artifact that sits between prompt and `.cr8` generation; its own validator (`tools/check_map.py`) follows the same `--check-json` shape |
 | Fetch JSON, transform, write CSV | [`examples/api_ingest.cr8`](examples/api_ingest.cr8) |
 | Validate a list of records | [`examples/validate.cr8`](examples/validate.cr8) |
 | Emit a markdown report | [`examples/report_md.cr8`](examples/report_md.cr8) |

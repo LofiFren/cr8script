@@ -228,3 +228,13 @@ issues without running the program. Then run `python3 cr8script.py file.cr8`.
 - Safe field access on a record literal of unknown shape -> `r.get("key")`.
 - Safe HTTP success check -> `r.ok and r.status is at least 200 and r.status is less than 400`.
 - Print formatted output -> `show f"{name}: {count}"`, not concatenation.
+
+## See also
+
+- [`AGENTS.md`](AGENTS.md) -- system-prompt template and tool definitions
+  for using cr8script inside an LLM agent loop.
+- [`LLM_MAP.md`](LLM_MAP.md) -- typed planning-graph format that sits
+  between a prompt and the `.cr8` artifact, with its own JSON validator
+  (`tools/check_map.py`) that mirrors `--check-json`.
+- [`examples/agent_loop/`](examples/agent_loop/) -- the self-correction
+  loop demo, end to end (broken -> diagnostics -> fixed).

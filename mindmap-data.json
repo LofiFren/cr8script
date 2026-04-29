@@ -3,6 +3,6 @@
   {"name":"Pipelines","color":"#7ec5b8","target":".card--pipelines","topics":["where","sort by","take","map","group by","summarize"]},
   {"name":"Types","color":"#d8a3b8","target":".card--types","topics":["number (decimal)","text","boolean","list","record","nothing"]},
   {"name":"Built-ins","color":"#a3c79e","target":".card--builtins","topics":["math","json","csv","http","time","sum / count / avg"]},
-  {"name":"Tooling","color":"#9aafd6","target":".card--tooling","topics":["REPL","--check","--check-json","--test","tour.cr8"]},
+  {"name":"Tooling","color":"#9aafd6","target":".card--tooling","topics":["REPL","--check-json","--test","tour.cr8","LLM map","AGENTS.md"]},
   {"name":"Principles","color":"#c3a6d8","target":".card--principles","topics":["no truthy/falsy","0.1 + 0.2 = 0.3","no null surprises","errors that teach","values not objects","determinism"]}
 ]
