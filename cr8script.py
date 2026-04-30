@@ -2037,6 +2037,20 @@ def _m_pow(args, line):
 
 
 # --- http module ---
+def _http_ssl_context():
+    # Build an SSL context. macOS python.org installs ship without any system
+    # roots wired up, so a fresh `pip install cr8script` would otherwise fail
+    # every HTTPS call with CERTIFICATE_VERIFY_FAILED. certifi is declared as
+    # a runtime dep in pyproject.toml; the import-and-fall-back shape keeps
+    # the source-tree path zero-deps for users who run cr8script.py directly.
+    import ssl as _ssl
+    try:
+        import certifi as _certifi
+        return _ssl.create_default_context(cafile=_certifi.where())
+    except ImportError:
+        return _ssl.create_default_context()
+
+
 def _http_get(args, line):
     url = args[0]
     if not isinstance(url, str):
@@ -2045,7 +2059,7 @@ def _http_get(args, line):
     req = urllib.request.Request(url, headers={"User-Agent": "cr8script/0.1"})
     t0 = _time.monotonic()
     try:
-        with urllib.request.urlopen(req, timeout=30) as resp:
+        with urllib.request.urlopen(req, timeout=30, context=_http_ssl_context()) as resp:
             body = resp.read().decode("utf-8", errors="replace")
             elapsed_ms = _num((_time.monotonic() - t0) * 1000.0)
             return PlainRecord({
@@ -2400,6 +2414,51 @@ class _CheckIssue:
         return out
 
 
+def _contains_call(node) -> bool:
+    """Walks an expression AST and returns True if any Call appears.
+
+    Used by the Checker to decide whether a top-level BinOp/UnaryOp is
+    discarded-and-pointless or might be doing real work via a side-effecting
+    function call.
+    """
+    if node is None:
+        return False
+    t = type(node)
+    if t is Call:
+        return True
+    if t is BinOp:
+        return _contains_call(node.left) or _contains_call(node.right)
+    if t is UnaryOp:
+        return _contains_call(node.operand)
+    if t is FieldAccess:
+        return _contains_call(node.obj)
+    if t is Index:
+        return _contains_call(node.obj) or _contains_call(node.key)
+    if t is Pipeline:
+        if _contains_call(node.source):
+            return True
+        for st in node.stages:
+            # Only `arg` is an expression on PipelineStage; the rest are
+            # scalars (str, bool, int) that _contains_call ignores anyway.
+            if _contains_call(getattr(st, "arg", None)):
+                return True
+        return False
+    if t is FString:
+        return any(_contains_call(p) for p in node.parts if not isinstance(p, str))
+    if t is List_:
+        return any(_contains_call(x) for x in node.items)
+    if t is Record:
+        return any(_contains_call(v) for _, v in node.fields)
+    if t is IfExpr:
+        if _contains_call(node.cond) or _contains_call(node.then_val) or _contains_call(node.else_val):
+            return True
+        for c, v in node.elifs:
+            if _contains_call(c) or _contains_call(v):
+                return True
+        return False
+    return False
+
+
 _BUILTIN_NAMES = frozenset({
     # Top-level functions registered in make_global_env.
     "length", "to_text", "to_number", "sum", "count", "average",
@@ -2544,6 +2603,35 @@ class Checker:
             return
         if t is ExprStmt:
             self.check_expr(node.expr)
+            # Discarded-expression check. An ExprStmt whose root has no Call
+            # inside is a pure expression whose value is thrown away. The
+            # most common cause is an attempted line continuation:
+            #   let qs = "first"
+            #          + "second"
+            # The parser closes the let on the newline; the leading-operator
+            # line then parses as a bare literal/operand statement and the
+            # second string silently vanishes. The Checker is never run on
+            # the REPL, so flagging this aggressively in script mode is safe.
+            ex = node.expr
+            if not _contains_call(ex):
+                kind = type(ex).__name__
+                if isinstance(ex, (Str, Num, Bool, Nothing, FString,
+                                    BinOp, UnaryOp)):
+                    hint = ("looks like a line-continuation. cr8script "
+                            "doesn't continue binary expressions across "
+                            "newlines: keep the operator at the end of the "
+                            "previous line (`let qs = \"first\" +` then "
+                            "`     \"second\"`), or wrap the whole "
+                            "expression in parentheses.")
+                else:
+                    hint = ("did you forget `show`, `let`, `var`, `=`, or to "
+                            "call something? a bare expression at statement "
+                            "position has no effect.")
+                self.issue(
+                    f"discarded {kind.lower()} expression -- value is unused",
+                    line=node.line,
+                    hint=hint,
+                )
             return
         # Fall through: unknown statement type (shouldn't happen).
 

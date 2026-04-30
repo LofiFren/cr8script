@@ -4,12 +4,19 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "cr8script"
-version = "1.1.0"
+version = "1.2.0"
 description = "An English-shaped scripting language for LLMs and anyone who wants quick scripts without Python's footguns."
 readme = "README.md"
 license = { file = "LICENSE" }
 authors = [{ name = "Lofi Fren" }]
 requires-python = ">=3.9"
+dependencies = [
+  # certifi is a soft dep: when installed, http.get builds an SSL context
+  # against its bundle so HTTPS works on macOS python.org installs out of
+  # the box. cr8script also runs zero-deps from a clone of cr8script.py
+  # for users who don't want the install.
+  "certifi>=2024.2.2",
+]
 keywords = ["scripting", "language", "llm", "agents", "interpreter", "decimal", "pipelines"]
 classifiers = [
   "Development Status :: 4 - Beta",

@@ -100,7 +100,7 @@ python3 cr8script.py file.cr8                  # run
 
 ## Status
 
-v1.1. Single-file Python interpreter (`cr8script.py`, ~2.8k lines):
+v1.2. Single-file Python interpreter (`cr8script.py`, ~3k lines):
 lexer, parser, tree-walking evaluator, REPL, static checker, ten golden
 tests. The *language* is independent of Python -- only the bootstrap is.
 

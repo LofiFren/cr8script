@@ -31,6 +31,10 @@ idioms produce errors, not silent success.
 - **`let` is immutable.** Reassignment requires `var`.
 - **Pipelines only operate on lists.** Convert first if needed.
 - **Only `nothing` for absence.** No `null`, no `None`, no `undefined`.
+- **No implicit line continuation.** Binary expressions don't continue across
+  newlines. `let x = "a" \n + "b"` parses as a `let` plus a discarded `"b"`.
+  Keep the operator at the end of the previous line, or wrap the whole
+  expression in parentheses. The static checker flags the discard as an error.
 
 ## Syntax cheat sheet
 
