@@ -8,3 +8,6 @@ __pycache__/
 BENCHMARKS.md
 baseline/
 benchmarks/
+build/
+dist/
+*.egg-info/

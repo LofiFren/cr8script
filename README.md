@@ -11,13 +11,23 @@ atlas, and a playable demo.
 
 ## Quick start
 
+Install from PyPI:
+
+```bash
+pip install cr8script
+cr8script examples/tour.cr8                   # the language tour
+cr8script                                     # REPL
+```
+
+Or run from a clone -- no install needed:
+
 ```bash
 python3 cr8script.py examples/tour.cr8        # the language tour
 python3 cr8script.py                          # REPL
 python3 cr8script.py --test                   # run the golden suite
 ```
 
-Python 3.9+. No pip, no venv, no flags.
+Python 3.9+. One file, no dependencies either way.
 
 ## A taste
 

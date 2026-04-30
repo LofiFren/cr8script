@@ -30,17 +30,27 @@ The static checker (`--check-json`) walks the AST and emits **all such
 issues at once**, so one round trip through the agent's tool-use loop
 typically converges to a working program.
 
+## Install
+
+```bash
+pip install cr8script
+```
+
+That gives you a `cr8script` command on `$PATH`. From a clone, the
+equivalent is `python3 cr8script.py`. The two are interchangeable in
+every example below -- pick whichever matches the agent's environment.
+
 ## The loop
 
 ```text
 1. Generate a .cr8 script.
-2. Run:  python3 cr8script.py --check-json $FILE
+2. Run:  cr8script --check-json $FILE
 3. Parse stdout as JSON.
    - If the list is empty:   continue to step 4.
    - Otherwise:               for each {line, message, hint},
                               edit the file at `line` using `hint`,
                               then GOTO 2.
-4. Run:  python3 cr8script.py $FILE
+4. Run:  cr8script $FILE
    - exit 0:   done.
    - exit 1:   parse line/message/hint from stderr, edit, GOTO 2.
 ```
@@ -56,7 +66,7 @@ A working end-to-end demo is at [`examples/agent_loop/`](examples/agent_loop/).
 > `to name(args) ... end`, **not** `def name(args):`.
 >
 > Before claiming a script works, run
-> `python3 cr8script.py --check-json file.cr8` and fix every issue in
+> `cr8script --check-json file.cr8` and fix every issue in
 > the JSON output. Each issue has `{line, message, hint}` -- apply the
 > hint, re-check, repeat until the list is empty. Then run the script.
 >

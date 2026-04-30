@@ -2862,7 +2862,7 @@ def run_tests(testdir: str) -> int:
     return 1 if failures else 0
 
 
-def main(argv: list[str]) -> int:
+def _main_impl(argv) -> int:
     if len(argv) >= 2 and argv[1] == "--lex":
         src = sys.stdin.read() if len(argv) < 3 else open(argv[2]).read()
         for t in tokenize(src):
@@ -2895,9 +2895,15 @@ def main(argv: list[str]) -> int:
     return 0
 
 
-if __name__ == "__main__":
+def main(argv=None) -> int:
+    if argv is None:
+        argv = sys.argv
     try:
-        sys.exit(main(sys.argv))
+        return _main_impl(argv)
     except PlainError as e:
         print(e.format(), file=sys.stderr)
-        sys.exit(1)
+        return 1
+
+
+if __name__ == "__main__":
+    sys.exit(main(sys.argv))
