@@ -7,7 +7,7 @@ the way you'd describe the work out loud.
 Website: [cr8script.com](https://cr8script.com) -- language tour, animated
 atlas, and a playable demo.
 
-![cr8script atlas -- a mindmap of the language](mindmap.jpg)
+![cr8script atlas -- a mindmap of the language](mindmap.gif)
 
 ## Quick start
 
