@@ -1,0 +1,94 @@
+# Aggregate current weather for cities in Alameda County, CA.
+#
+# A live data flow demo: HTTP -> JSON -> records -> pipelines ->
+# summary. No API key required (Open-Meteo is free + key-less).
+#
+#   cr8script examples/weather.cr8
+
+let cities = [
+  { name: "Oakland",     lat: 37.8044, lon: -122.2712 },
+  { name: "Berkeley",    lat: 37.8716, lon: -122.2727 },
+  { name: "Fremont",     lat: 37.5485, lon: -121.9886 },
+  { name: "Hayward",     lat: 37.6688, lon: -122.0808 },
+  { name: "Alameda",     lat: 37.7652, lon: -122.2416 },
+  { name: "San Leandro", lat: 37.7249, lon: -122.1561 },
+  { name: "Livermore",   lat: 37.6819, lon: -121.7680 },
+  { name: "Pleasanton",  lat: 37.6624, lon: -121.8747 },
+  { name: "Dublin",      lat: 37.7022, lon: -121.9358 }
+]
+
+let base = "https://api.open-meteo.com/v1/forecast"
+let qs = "&current=temperature_2m,wind_speed_10m,relative_humidity_2m&temperature_unit=fahrenheit&wind_speed_unit=mph"
+
+show f"Aggregating weather for {length(cities)} Alameda County cities ..."
+show ""
+
+var rows = []
+var failures = 0
+
+for each c in cities
+  let url = base + f"?latitude={c.lat}&longitude={c.lon}" + qs
+  let r = http.get(url)
+  let healthy = r.ok and r.status is at least 200 and r.status is less than 300
+
+  if healthy is false then
+    show f"  {c.name}: FAIL (status {r.status}, error {r.error})"
+    failures = failures + 1
+  else
+    let body = json.parse(r.body)
+    let cur = body.current
+    rows = rows + [{
+      city:     c.name,
+      temp_f:   cur.temperature_2m,
+      humidity: cur.relative_humidity_2m,
+      wind_mph: cur.wind_speed_10m,
+      ms:       r.time_ms
+    }]
+  end
+end
+
+to pad_right(s, width)
+  var out = s
+  for each i in 1..(width - s.length)
+    out = out + " "
+  end
+  return out
+end
+
+show ""
+show "per-city snapshot"
+show "-----------------------------------------------------------"
+show "city          temp(F)   humidity(%)   wind(mph)   fetch(ms)"
+
+for each row in rows | sort by city
+  let name_col = pad_right(row.city, 13)
+  let temp_col = pad_right(to_text(math.round(row.temp_f * 10) / 10), 8)
+  let hum_col  = pad_right(to_text(row.humidity), 13)
+  let wind_col = pad_right(to_text(row.wind_mph), 11)
+  show f"{name_col} {temp_col} {hum_col} {wind_col} {to_text(math.round(row.ms))}"
+end
+
+show ""
+show "aggregate"
+show "-----------------------------------------------------------"
+
+if length(rows) is at least 1 then
+  let temps = rows | map temp_f
+  let winds = rows | map wind_mph
+  let hums  = rows | map humidity
+
+  let hottest = rows | sort by temp_f descending | take 1
+  let coldest = rows | sort by temp_f ascending  | take 1
+  let windy   = rows | sort by wind_mph descending | take 1
+
+  show f"  cities reporting:  {length(rows)}"
+  show f"  failures:          {failures}"
+  show f"  avg temp:          {to_text(math.round(average(temps) * 10) / 10)} F"
+  show f"  min / max temp:    {to_text(min(temps))} / {to_text(max(temps))} F"
+  show f"  avg humidity:      {to_text(math.round(average(hums)))} %"
+  show f"  avg wind:          {to_text(math.round(average(winds) * 10) / 10)} mph"
+  show ""
+  show f"  hottest:  {hottest.first.city} -- {to_text(hottest.first.temp_f)} F"
+  show f"  coldest:  {coldest.first.city} -- {to_text(coldest.first.temp_f)} F"
+  show f"  windiest: {windy.first.city} -- {to_text(windy.first.wind_mph)} mph"
+end
