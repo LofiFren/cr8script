@@ -15,8 +15,10 @@ Install from PyPI:
 
 ```bash
 pip install cr8script
-cr8script examples/tour.cr8                   # the language tour
-cr8script                                     # REPL
+cr8script --example tour                      # the language tour
+cr8script --list-examples                     # see what else ships
+cr8script --help                              # all flags
+cr8script                                     # REPL (type `exit` or Ctrl-D to leave)
 ```
 
 Or run from a clone -- no install needed:
@@ -100,7 +102,7 @@ python3 cr8script.py file.cr8                  # run
 
 ## Status
 
-v1.2. Single-file Python interpreter (`cr8script.py`, ~3k lines):
+v1.3. Single-file Python interpreter (`cr8script.py`, ~3k lines):
 lexer, parser, tree-walking evaluator, REPL, static checker, ten golden
 tests. The *language* is independent of Python -- only the bootstrap is.
 

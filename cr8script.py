@@ -2875,14 +2875,21 @@ def run_source(src: str, filename: str = "<input>") -> int:
 
 def repl():
     env = make_global_env()
-    print("cr8script REPL -- type expressions or statements; Ctrl-D to exit.")
+    print("cr8script REPL -- type expressions or statements;")
+    print("type `exit` or `quit` (or press Ctrl-D / Ctrl-C) to leave.")
     buf = ""
     prompt = ">>> "
+    EXIT_WORDS = {"exit", "quit", "exit()", "quit()", ":q", ":quit", ":exit"}
     while True:
         try:
             line = input(prompt)
         except (EOFError, KeyboardInterrupt):
             print()
+            return
+        # REPL-only sugar: a bare `exit` or `quit` ends the session. We
+        # intercept before tokenize so it never reaches the parser/Checker
+        # (where it would otherwise be flagged as an undefined name).
+        if not buf and line.strip() in EXIT_WORDS:
             return
         buf = (buf + "\n" + line).strip() if buf else line
         # Try to parse -- if it fails because of EOF mid-block, continue reading.
@@ -2950,7 +2957,113 @@ def run_tests(testdir: str) -> int:
     return 1 if failures else 0
 
 
+_HELP_TEXT = """\
+cr8script -- an English-shaped scripting language
+
+USAGE
+  cr8script <file> [args...]      run the script (extra args land in `args`)
+  cr8script                       start the REPL
+  cr8script --check <file>        static-check (human output)
+  cr8script --check-json <file>   static-check (JSON output)
+  cr8script --example <name>      run a bundled example by name
+  cr8script --list-examples       list available examples
+  cr8script --test [dir]          run the golden suite
+  cr8script --lex <file>          dump tokens (debug)
+  cr8script --ast <file>          dump AST (debug)
+  cr8script --help, -h            this message
+
+EXAMPLES
+  cr8script --example tour        # the language tour
+  cr8script --example weather     # live API + aggregate
+  cr8script --check-json my.cr8   # structured diagnostics
+  cr8script my.cr8 a b c          # run with three CLI args
+
+DOCS
+  https://cr8script.com/agents.html       integrator playbook
+  https://github.com/LofiFren/cr8script   source + examples
+"""
+
+# Short catalog used by --list-examples. Order is intentional (most useful
+# first). Names map to files in examples/<name>.cr8 in the language repo.
+_EXAMPLES_CATALOG = [
+    ("tour",         "the language end-to-end (the canonical demo)"),
+    ("hello",        "three-line hello world"),
+    ("weather",      "live API + aggregate (Alameda County weather)"),
+    ("api_ingest",   "fetch JSON, summarize per-user, emit CSV"),
+    ("validate",     "list of records -> ok/errors per item"),
+    ("report_md",    "structured tickets -> markdown standup report"),
+    ("load_test",    "an HTTP load tester written in cr8"),
+    ("make_game",    "generate a static HTML reaction game"),
+    ("make_balloon_game", "generate a balloon-popping game"),
+    ("make_mindmap", "generate the cr8script atlas as standalone HTML"),
+]
+_EXAMPLES_BASE_URL = (
+    "https://raw.githubusercontent.com/LofiFren/cr8script/main/examples"
+)
+
+
+def _example_cache_dir():
+    return os.path.expanduser("~/.cache/cr8script/examples")
+
+
+def _resolve_example(name: str) -> tuple[str, str]:
+    """Resolve an example name to (path, source_text). Three-tier:
+    1. Local examples/ next to cr8script.py (the cloned-repo path).
+    2. Fetched-and-cached file under ~/.cache/cr8script/examples/.
+    3. Fresh HTTPS fetch from the language repo, then cached.
+    """
+    name = name.removesuffix(".cr8")
+    fname = f"{name}.cr8"
+
+    here = os.path.dirname(os.path.abspath(__file__))
+    local = os.path.join(here, "examples", fname)
+    if os.path.exists(local):
+        return local, open(local).read()
+
+    cache = _example_cache_dir()
+    cached = os.path.join(cache, fname)
+    if os.path.exists(cached):
+        return cached, open(cached).read()
+
+    # Fall through to network. Reuse the same SSL context as http.get so
+    # certifi is wired in on macOS python.org installs.
+    import urllib.request, urllib.error
+    url = f"{_EXAMPLES_BASE_URL}/{fname}"
+    print(f"fetching {url}", file=sys.stderr)
+    try:
+        with urllib.request.urlopen(
+                url, timeout=15, context=_http_ssl_context()) as resp:
+            src = resp.read().decode("utf-8")
+    except urllib.error.HTTPError as e:
+        if e.code == 404:
+            raise PlainError(
+                f"no example named {name!r}",
+                hint="run `cr8script --list-examples` to see available names",
+            )
+        raise PlainError(f"could not fetch example {name!r}: HTTP {e.code}")
+    except Exception as e:
+        raise PlainError(f"could not fetch example {name!r}: {e}")
+
+    os.makedirs(cache, exist_ok=True)
+    with open(cached, "w") as f:
+        f.write(src)
+    return cached, src
+
+
+def _print_examples_list():
+    print("Available cr8script examples:\n")
+    for name, desc in _EXAMPLES_CATALOG:
+        print(f"  {name:<20} {desc}")
+    print()
+    print("Run any of them with:  cr8script --example <name>")
+    print(f"Cached at:             {_example_cache_dir()}")
+
+
 def _main_impl(argv) -> int:
+    global _SCRIPT_ARGS
+    if len(argv) >= 2 and argv[1] in ("--help", "-h"):
+        print(_HELP_TEXT, end="")
+        return 0
     if len(argv) >= 2 and argv[1] == "--lex":
         src = sys.stdin.read() if len(argv) < 3 else open(argv[2]).read()
         for t in tokenize(src):
@@ -2964,7 +3077,7 @@ def _main_impl(argv) -> int:
         return 0
     if len(argv) >= 2 and argv[1] in ("--check", "--check-json"):
         if len(argv) < 3:
-            print("usage: cr8script.py --check <file>", file=sys.stderr)
+            print("usage: cr8script --check <file>", file=sys.stderr)
             return 2
         path = argv[2]
         return run_check(open(path).read(),
@@ -2974,9 +3087,25 @@ def _main_impl(argv) -> int:
         testdir = argv[2] if len(argv) >= 3 else os.path.join(
             os.path.dirname(os.path.abspath(__file__)), "testdata")
         return run_tests(testdir)
+    if len(argv) >= 2 and argv[1] == "--list-examples":
+        _print_examples_list()
+        return 0
+    if len(argv) >= 2 and argv[1] == "--example":
+        if len(argv) < 3:
+            print("usage: cr8script --example <name>", file=sys.stderr)
+            print("hint:  run `cr8script --list-examples` to see names",
+                  file=sys.stderr)
+            return 2
+        path, src = _resolve_example(argv[2])
+        _SCRIPT_ARGS = list(argv[3:])
+        return run_source(src, filename=os.path.basename(path))
+    if len(argv) >= 2 and argv[1].startswith("-"):
+        print(f"unknown flag: {argv[1]!r}", file=sys.stderr)
+        print("run `cr8script --help` for the full list of flags",
+              file=sys.stderr)
+        return 2
     if len(argv) >= 2:
         path = argv[1]
-        global _SCRIPT_ARGS
         _SCRIPT_ARGS = list(argv[2:])
         return run_source(open(path).read(), filename=os.path.basename(path))
     repl()
